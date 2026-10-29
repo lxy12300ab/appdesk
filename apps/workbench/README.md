@@ -19,21 +19,30 @@
 | 能力 | 说明 |
 |---|---|
 | 应用登记 | 名称/用途/分类/开发来源/本地地址/在线地址/GitHub/本地路径/部署目标/启动方法/线上更新方法/launchd/标签/备注 |
-| 健康探活 | 并发 GET 每个本地与在线地址，卡片上直接亮绿点（up）/红点（down）/灰点（未配置），带响应码与耗时 |
+| 健康探活 | 并发探每个本地/在线地址，区分「端口没人听」「超时」「被别的进程占用」「返回 4xx/5xx」——不只亮个绿点 |
+| 归属核对 | 拿到端口后反查 `lsof` 的 pid / 进程名 / 工作目录，再跟登记的本地路径（含符号链接解析）和 launchd pid 对账，防止「端口被别的进程占了也亮绿」 |
+| 在线率 | 后台每 2 分钟采样一次，落 `data/health.jsonl`，卡片详情里能看到「24h 在线 98%（720 次采样）」 |
+| GitHub 同步状态 | 读本地仓库：有未提交改动、有提交没推、分支没设 upstream、登记的仓库与本地 origin 不是同一个，都会在卡片正面弹一条琥珀色提示；干净的卡片一点噪音都没有。侧栏「待同步」可一键筛出没同步的应用 |
+| 对远端核实 | 探活里的「领先几个提交」是拿本地缓存算的，可能过期。点「对远端核实」会真的问一次 GitHub 当前分支的 sha（`git ls-remote`，1~2 秒），回答「GitHub 上到底是不是最新」 |
 | 一键执行 | 「本地启动」「线上更新」按钮，执行前弹确认框，输出实时回显在控制台面板 |
-| 常驻管理 | 对 launchd 应用直接「重启常驻服务」「查状态」 |
+| 常驻管理 | 对 launchd 应用直接「重启常驻服务」「查状态」；登记的 label 过期时按 plist 启动脚本自动找到真正在用的那个 |
 | 自动发现 | 扫本机监听端口（node/Python/bun）、launchd 常驻列表、GitHub 仓库列表，作为补登记的线索 |
 | 筛选 | 按分类、按开发来源（openclaw / codex / workbuddy / claude / human）、全文搜索 |
 | 导出 | 一键导出 Markdown 清单，可直接贴进 Obsidian 或当交接文档 |
+| 数据安全 | 写文件走「临时文件 + rename」原子写；每次写入前自动备份，保留最近 20 份；每次增删改记一条带 before/after 的历史 |
 
 ## 结构
 
 ```
-server.mjs        Node 原生 http，零第三方依赖
-data/apps.json    全部登记数据（可直接手改，改完刷新页面）
-web/index.html   单页前端，无构建
+server.mjs           Node 原生 http，零第三方依赖
+data/apps.json       全部登记数据（可直接手改，改完刷新页面）
+data/backups/        每次写入前的自动备份，保留最近 20 份
+data/history.jsonl   增删改历史，带 before/after
+data/health.json     最近一次探活快照（页面打开即用）
+data/health.jsonl    探活采样流水，用于算在线率（保留 7 天）
+web/index.html       单页前端，无构建
 web/style.css
-start.sh          健康检查 → 不在就 load plist → 开浏览器
+start.sh             健康检查 → 不在就 load plist → 开浏览器
 ```
 
 ## 运维
@@ -41,12 +50,13 @@ start.sh          健康检查 → 不在就 load plist → 开浏览器
 服务由 **launchd 常驻**：`com.local.appdesk-workbench`（`~/Library/LaunchAgents/com.local.appdesk-workbench.plist`），不挂在网关进程下，不会被会话回收带走。
 
 ```bash
-launchctl list | grep workbench
+# launchctl list 有时候拿不到详情，print 更靠得住
+launchctl print gui/$(id -u)/com.local.appdesk-workbench | head -20
 launchctl kickstart -k gui/$(id -u)/com.local.appdesk-workbench
-tail -f /tmp/workbench.err.log
+tail -f /tmp/appdesk-workbench.err.log
 ```
 
-端口可用 `WORKBENCH_PORT` 覆盖。
+端口可用 `WORKBENCH_PORT` 覆盖；后台探活间隔可用 `WORKBENCH_CHECK_INTERVAL`（毫秒，默认 120000，设 0 关闭）调整。
 
 ## API
 
@@ -55,7 +65,10 @@ tail -f /tmp/workbench.err.log
 | GET | `/api/apps` | 全部应用 + 元数据（分类、来源枚举） |
 | POST | `/api/apps` | 新建或按 id 覆盖保存 |
 | DELETE | `/api/apps/<id>` | 删除 |
-| POST | `/api/check` | 探活全部本地/在线地址 |
+| POST | `/api/check` | 探活全部本地/在线地址（含归属核对 + 本地 git 同步状态），返回结果 + 24h 在线率 |
+| GET | `/api/health` | 读上次落盘的探活快照 + 24h 在线率，不重新探活 |
+| POST | `/api/git/verify` | `{id}`：`git ls-remote` 核实远端分支 sha，判断 GitHub 上是不是最新（会走网络，1~2 秒） |
+| GET | `/api/history` | 增删改历史，`?limit=N`（1–500，默认 50） |
 | GET | `/api/discover` | 端口 + launchd + GitHub 仓库扫描 |
 | POST | `/api/launchd` | `{label, action: restart\|status}` |
 | POST | `/api/run` | `{appId, kind: start\|update}` 执行登记的命令 |
@@ -102,5 +115,10 @@ tail -f /tmp/workbench.err.log
 ## 已知限制
 
 - 探活只做 HTTP GET，SSH 隧道后的服务需要配好端口转发才能测到。
+- 归属核对依赖 `lsof`：拿不到进程工作目录时（例如系统进程或权限受限）只报告「端口有进程、无法核对」，不下「不是它」的结论。
+- Git 同步状态里的「领先/落后几个提交」是拿本地 tracking ref 算的，很久没 fetch 会失真；详情里会标「上次 fetch N 天前」，要准就点「对远端核实」。
+- 一个目录里可能有多个应用（比如 `appdesk` 仓库下的 taste-lab 和 workbench），它们会同时报同一个仓库的改动，提示条上标了仓库名。
+- 未跟踪文件（`??`）和已跟踪文件的改动分开统计：卡片正面只报已跟踪文件的改动数，否则像 `~/.openclaw/workspace` 这种大仓库会被一堆运行时产物报成几百个。
 - 「线上更新」执行的是登记的命令（如 `bash deploy.sh`），本身幂等性取决于各项目的脚本。
-- GitHub 仓库列表读 `GH_ACCOUNT` 环境变量指定的账号（默认 `your-account`，需 `gh` CLI 已登录）。
+- GitHub 仓库列表读 `GH_ACCOUNT` 环境变量指定的账号（默认 `lxy12300ab`，需 `gh` CLI 已登录）。
+- 执行记录只存在内存里，服务重启后 `/api/run/<runId>` 就查不到了；也没有队列，连点两次会同时跑两条命令。

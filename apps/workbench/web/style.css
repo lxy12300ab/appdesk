@@ -123,7 +123,7 @@ svg.icon { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-wid
 html[data-theme="light"] .theme-toggle .track { background: var(--accent); }
 html[data-theme="light"] .theme-toggle .track i { transform: translateX(13px); background: var(--panel); }
 
-.main { padding: 28px 30px 80px; max-width: 1180px; }
+.main { padding: 28px 30px 80px; min-width: 0; }
 
 .topbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
 .kicker { font-size: var(--fs-aux); color: var(--accent); margin-bottom: 10px; }
@@ -187,7 +187,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .btn.icon-only { width: 44px; height: 44px; padding: 0; justify-content: center; }
 
 /* ============ 卡片 ============ */
-.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
 
 .card {
   background: var(--panel);
@@ -253,6 +253,25 @@ details.more > .more-body { display: grid; gap: 12px; margin-top: 12px; }
 /* 作者样式覆盖了浏览器默认的 details 折叠，必须显式复位，否则详情始终展开 */
 details.more:not([open]) > .more-body { display: none; }
 
+/* 地址区：本地 / 线上 常驻卡片外层，点击直达 */
+.addresses { display: flex; gap: 8px; flex-wrap: wrap; }
+.addresses a {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 44px; padding: 0 12px;
+  font-family: var(--mono); font-size: var(--fs-aux);
+  color: var(--ink-2, var(--ink)); text-decoration: none;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-sm);
+  transition: border-color .15s, color .15s, background .15s;
+}
+.addresses a:hover { border-color: var(--accent); color: var(--ink); background: var(--panel); }
+.addresses a svg { width: 14px; height: 14px; color: var(--muted); }
+.addresses a:hover svg { color: var(--accent); }
+.addresses a .url { max-width: 26ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.addresses a.repo { color: var(--muted); }
+.addresses a.repo:hover { color: var(--ink); }
+.addresses a.repo svg { color: var(--muted); }
+
+/* 详情内的次级链接（GitHub 等） */
 .links { display: flex; gap: 8px; flex-wrap: wrap; }
 .links a {
   display: inline-flex; align-items: center; gap: 6px;

@@ -252,9 +252,14 @@ function dot(h) {
 function card(a) {
   const h = HEALTH[a.id];
   const links = [];
-  if (a.localUrl) links.push(`<a href="${a.localUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-laptop"/></svg>本地 ${dot(h?.local)}</a>`);
-  if (a.onlineUrl) links.push(`<a href="${a.onlineUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-globe"/></svg>在线 ${dot(h?.online)}</a>`);
   if (a.repo) links.push(`<a href="${a.repo}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-github"/></svg>GitHub</a>`);
+
+  // 常驻地址区：本地 / 线上 直接可点，这是最常用的入口
+  const addrs = [];
+  if (a.localUrl) addrs.push(`<a href="${a.localUrl}" target="_blank" rel="noreferrer" title="${esc(a.localUrl)}">
+      <svg class="icon"><use href="#i-laptop"/></svg>本地 ${dot(h?.local)}<span class="url">${esc(a.localUrl.replace(/^https?:\/\//, ''))}</span></a>`);
+  if (a.onlineUrl) addrs.push(`<a href="${a.onlineUrl}" target="_blank" rel="noreferrer" title="${esc(a.onlineUrl)}">
+      <svg class="icon"><use href="#i-globe"/></svg>线上 ${dot(h?.online)}<span class="url">${esc(a.onlineUrl.replace(/^https?:\/\//, ''))}</span></a>`);
 
   const cmds = [];
   if (a.localStart) cmds.push(`<div class="cmd">
@@ -283,11 +288,10 @@ function card(a) {
       <button class="btn sm" data-lcd="status" data-label="${esc(a.launchd)}"><svg class="icon"><use href="#i-info"/></svg>查状态</button>
     </div>` : '';
 
-  // 主操作：本地地址优先，其次在线地址，最后仓库
+  // 主操作：优先打开本地，其次线上
   let primary = '';
-  if (a.localUrl) primary = `<a class="btn link" href="${a.localUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-laptop"/></svg>打开</a>`;
-  else if (a.onlineUrl) primary = `<a class="btn link" href="${a.onlineUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-globe"/></svg>打开</a>`;
-  else if (a.repo) primary = `<a class="btn link" href="${a.repo}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-github"/></svg>仓库</a>`;
+  if (a.localUrl) primary = `<a class="btn link" href="${a.localUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-play"/></svg>打开本地</a>`;
+  else if (a.onlineUrl) primary = `<a class="btn link" href="${a.onlineUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-play"/></svg>打开线上</a>`;
 
   const running = h?.local?.status === 'up';
   const statusLabel = running ? '运行中' : (h?.local?.status === 'down' ? '未运行' : '未探测');
@@ -303,6 +307,7 @@ function card(a) {
       <span class="badge ${statusCls}"><i class="dot"></i>${statusLabel}</span>
     </div>
     <p class="purpose">${esc(a.purpose) || '<span class="dim">未填写用途</span>'}</p>
+    ${addrs.length ? `<div class="addresses">${addrs.join('')}</div>` : ''}
     <div class="card-actions">
       ${primary}
       <details class="more">

@@ -3,202 +3,543 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Taste Lab · 审美审查台</title>
-<link rel="icon" href='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230d0e10%22/%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d8ff3e%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2217%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%228%22/%3E%3Cpath%20d%3D%22M32%2032%2045%2021%22/%3E%3C/g%3E%3C/svg%3E'>
+<title>审美审查台 · Taste Lab</title>
+<link rel="icon" href="/web/logo-mark.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/web/style.css">
 <script>
-  try { document.documentElement.dataset.theme = localStorage.getItem('taste-lab-theme') || 'dark'; } catch (e) {}
+  (function () {
+    var t;
+    try { t = localStorage.getItem('taste-lab-theme'); } catch (e) {}
+    if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t;
+  })();
 </script>
 </head>
 <body>
 
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
-  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
-  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></symbol>
   <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="m21 15-5-5L5 21"/></symbol>
-  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h10M18 18h2"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5 19 12 7 19.5v-15z"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></symbol>
-  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4M12 17h.01"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
   <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 20 6"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 6.3"/><path d="M20 5v6h-6"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 6V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12m0 0-5-5m5 5 5-5"/><path d="M4 18v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5m0 0 6-6m-6 6 6 6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></symbol>
 </svg>
 
-<button class="theme-toggle" id="theme-toggle" title="切换深浅色">
-  <svg class="icon" id="theme-icon"><use href="#i-sun"/></svg>
-  <span id="theme-label">浅色模式</span>
-  <span class="track"><i></i></span>
-</button>
-
-<div class="wrap">
-  <header>
-    <div class="kicker">Taste Lab / 审美审查台</div>
-    <h1>把 AI 的审美<em>往上拉一档</em></h1>
-    <p class="lede">两道审查台叠加：<strong>design-taste</strong> 负责品位（方向、层级、留白、token 落地），<strong>Impeccable</strong> 负责框架（排版、色彩、动效、无障碍、反 AI 模板感）。脚本先量指标，模型再看图给分，最后出一份能直接执行的整改清单。</p>
-  </header>
-
-  <div class="tabs">
-    <button class="tab on" data-mode="site"><svg class="icon"><use href="#i-globe"/></svg>网站审查</button>
-    <button class="tab" data-mode="image"><svg class="icon"><use href="#i-image"/></svg>图片审查</button>
-    <button class="tab" data-mode="settings"><svg class="icon"><use href="#i-spark"/></svg>模型配置</button>
-  </div>
-
-  <div class="panel">
-    <div id="pane-site">
-      <div class="row">
-        <input type="text" id="site-url" placeholder="https://your-site.com" value="">
-        <select id="site-industry">
-          <option value="">加载行业…</option>
-        </select>
-        <button id="btn-site"><svg class="icon"><use href="#i-play"/></svg>开始审查</button>
+<div class="app">
+  <!-- ================= 侧栏 ================= -->
+  <aside class="rail">
+    <div class="brand">
+      <div class="brand-lockup">
+        <img class="brand-mark" src="/web/logo-mark.svg" alt="觉木">
+        <img class="brand-word lockup-dark" src="/web/logo-word-dark.svg" alt="DREAM 觉木">
+        <img class="brand-word lockup-light" src="/web/logo-word-light.svg" alt="DREAM 觉木">
       </div>
-      <p class="hint">采集 1440×900 首屏 + 整页截图 + 移动端 390×844，量出颜色/字体/层级/对比度，再由模型看图评分。本地地址如 <code>http://localhost:3000</code> 同样可用。<br>后台类应用（管理后台 / 内部控制台）需要登录时：先点「登录并保存会话」，在弹出的浏览器里登录一次，之后审查会自动带上登录态。</p>
-      <div class="row row-tight">
-        <button class="ghost" id="btn-login"><svg class="icon"><use href="#i-globe"/></svg>登录并保存会话</button>
-        <span class="auth-state" id="auth-state">未检查登录态</span>
-      </div>
-      <p class="hint" id="login-hint" style="display:none"></p>
+      <span class="brand-sub">Taste Lab · 审美审查台</span>
+    </div>
 
-      <details class="ref-box" id="ref-box">
-        <summary>
-          <svg class="icon"><use href="#i-target"/></svg>
-          <span>对标参考（可选）</span>
-          <span class="ref-summary" id="ref-summary">学习对方优秀的设计来修当前页面</span>
-        </summary>
-        <div class="ref-body">
-          <p class="hint">
-            填一个参考网址，或上传参考截图，可再补充你想学的具体规则（如「学它的留白节奏」「学它的卡片比例」）。
-            工具会先单独分析参考对象、提炼出<b>可迁移的设计手法</b>，再让模型带着这些手法来评审我们的页面——借鉴的是原理，不是照抄色值字号。
-          </p>
-          <div class="row">
-            <input type="text" id="ref-url" placeholder="参考网址（如 https://stripe.com）" style="flex:1 1 320px">
-            <input type="file" id="ref-files" accept="image/png,image/jpeg,image/webp" multiple>
+    <nav class="nav" role="tablist" aria-label="功能">
+      <span class="nav-label">审查</span>
+      <button class="nav-item on" data-mode="site" role="tab" aria-selected="true">
+        <svg class="i"><use href="#i-globe"/></svg><span>网站审查</span>
+      </button>
+      <button class="nav-item" data-mode="image" role="tab" aria-selected="false">
+        <svg class="i"><use href="#i-image"/></svg><span>图片审查</span>
+      </button>
+      <button class="nav-item" data-mode="audit" role="tab" aria-selected="false">
+        <svg class="i"><use href="#i-target"/></svg><span>整站扫描</span>
+      </button>
+      <button class="nav-item" data-mode="history" role="tab" aria-selected="false">
+        <svg class="i"><use href="#i-history"/></svg><span>审查记录</span><span class="badge" id="nav-count">—</span>
+      </button>
+      <span class="nav-label" style="margin-top:16px">设置</span>
+      <button class="nav-item" data-mode="settings" role="tab" aria-selected="false">
+        <svg class="i"><use href="#i-sliders"/></svg><span>模型配置</span>
+      </button>
+    </nav>
+
+    <button class="model-chip" id="model-chip" title="当前视觉模型 · 点击配置" style="margin-top:14px">
+      <span class="dot"></span>
+      <span class="mc-body">
+        <span class="lbl">视觉模型</span>
+        <span class="txt" id="model-chip-txt">加载中…</span>
+      </span>
+    </button>
+
+    <div class="rail-foot">
+      <div class="rail-foot-row">
+        <button class="btn btn-ghost btn-sm" id="theme-toggle" style="flex:1 1 auto;justify-content:flex-start">
+          <svg class="i" id="theme-icon"><use href="#i-sun"/></svg>
+          <span id="theme-label">深色</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= 主区 ================= -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1>
+          <span id="page-title">网站审查</span>
+          <span class="desc" id="page-desc">采集截图与设计指标，交模型看图评分</span>
+        </h1>
+        <span class="spacer"></span>
+        <span class="chip" id="engine-chip" title="审查引擎">
+          <svg class="i"><use href="#i-spark"/></svg>design-taste × Impeccable
+        </span>
+      </div>
+    </div>
+
+    <div class="canvas">
+      <!-- ---------------- 表单视图 ---------------- -->
+      <div id="view-form">
+
+        <!-- 网站审查 -->
+        <section class="pane-stack" data-pane="site">
+          <div class="card card-pad compose">
+            <div class="compose-main">
+              <div class="field">
+                <label class="label" for="site-url">目标网址</label>
+                <div class="input-wrap">
+                  <svg class="i"><use href="#i-globe"/></svg>
+                  <input class="input" type="text" id="site-url" placeholder="https://example.com 或 http://localhost:3000"
+                         spellcheck="false" autocomplete="off" autocapitalize="off">
+                </div>
+              </div>
+              <div class="field field-industry">
+                <label class="label" for="site-industry">行业基准 <span class="opt">可选</span></label>
+                <select class="input" id="site-industry"><option value="">不限（用全库中位数）</option></select>
+              </div>
+              <button class="btn btn-primary" id="btn-site" style="height:42px">
+                <svg class="i"><use href="#i-play"/></svg><span>开始审查</span>
+              </button>
+            </div>
+
+            <p class="hint" style="margin:0">
+              采集 1440×900 首屏 + 整页 + 移动端 390×844，量出颜色 / 字体 / 层级 / 对比度，再由模型看图评分。
+              <kbd>⌘</kbd><kbd>↵</kbd> 直接提交。
+            </p>
+
+            <div class="compose-foot">
+              <button class="btn btn-secondary btn-sm" id="btn-login">
+                <svg class="i"><use href="#i-lock"/></svg><span>登录并保存会话</span>
+              </button>
+              <span class="chip" id="auth-state">未检查登录态</span>
+              <span class="spacer"></span>
+              <span class="hint" style="margin:0" id="login-hint"></span>
+            </div>
           </div>
-          <textarea id="ref-notes" rows="2" placeholder="想学的具体规则（可选）：例如「学习它的首屏留白节奏」「学习它的表格密度」「学习它的配色克制」"></textarea>
-          <div class="ref-thumbs" id="ref-thumbs"></div>
-        </div>
-      </details>
-    </div>
 
-    <div id="pane-image" style="display:none">
-      <div class="row">
-        <input type="file" id="img-file" accept="image/png,image/jpeg,image/webp">
-        <select id="img-type">
-          <option value="">自动判断类型</option>
-          <option value="photo">照片</option><option value="product">产品图</option>
-          <option value="poster">海报</option><option value="social">社交图</option>
-          <option value="ui">界面截图</option><option value="illustration">插画</option>
-          <option value="figure">图表</option><option value="ai">AI 生成图</option>
-        </select>
-        <button id="btn-img"><svg class="icon"><use href="#i-play"/></svg>开始审查</button>
+          <details class="ref" id="ref-box">
+            <summary>
+              <svg class="i"><use href="#i-target"/></svg>
+              <b>对标参考</b>
+              <span class="sub">学对方优秀的设计手法，用来修当前页面</span>
+              <svg class="i chev"><use href="#i-chev"/></svg>
+            </summary>
+            <div class="ref-body">
+              <p class="hint" style="margin:0">
+                先单独分析参考对象、提炼<b>可迁移的设计手法</b>，再带着这些手法评审我们的页面——借鉴原理，不照抄色值字号。
+              </p>
+              <div class="row">
+                <div class="input-wrap grow">
+                  <svg class="i"><use href="#i-link"/></svg>
+                  <input class="input" type="text" id="ref-url" placeholder="参考网址，如 https://stripe.com">
+                </div>
+              </div>
+              <div>
+                <label class="label">参考截图 <span class="opt">可选，可多张</span></label>
+                <button class="dropzone" id="ref-drop" type="button">
+                  <svg class="i"><use href="#i-upload"/></svg>
+                  <span><b>点击选择或拖入参考截图</b>PNG / JPG / WebP</span>
+                </button>
+                <input type="file" id="ref-files" accept="image/png,image/jpeg,image/webp" multiple hidden>
+                <div class="thumbs" id="ref-thumbs" style="margin-top:10px"></div>
+              </div>
+              <div>
+                <label class="label" for="ref-notes">想学的具体规则 <span class="opt">可选</span></label>
+                <textarea class="input" id="ref-notes" rows="2" placeholder="例如：学它的首屏留白节奏 / 表格信息密度 / 配色克制"></textarea>
+              </div>
+            </div>
+          </details>
+
+          <div class="card" id="recent-card" hidden>
+            <div class="recent-head">
+              <div class="section-head" style="margin:0"><h2>最近审查</h2></div>
+              <span style="flex:1 1 auto"></span>
+              <button class="btn btn-ghost btn-sm" id="recent-all">全部记录 →</button>
+            </div>
+            <div class="hist-list" id="recent-list" style="padding:0 12px 12px"></div>
+          </div>
+
+          <div class="card progress" id="progress" hidden>
+            <div class="stages">
+              <div class="stage" data-stage="0"><div class="bar"><i></i></div><span>采集页面</span></div>
+              <div class="stage" data-stage="1"><div class="bar"><i></i></div><span>指标提取</span></div>
+              <div class="stage" data-stage="2"><div class="bar"><i></i></div><span>模型评审</span></div>
+            </div>
+            <div class="progress-meta">
+              <span id="progress-text">准备中…</span>
+              <span class="spacer"></span>
+              <span id="progress-time">0s</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 图片审查 -->
+        <section class="pane-stack" data-pane="image" hidden>
+          <div class="card card-pad" style="display:grid;gap:16px">
+            <div class="big-drop" id="img-drop">
+              <div class="inner">
+                <svg class="i"><use href="#i-image"/></svg>
+                <b>拖入图片，或点击选择</b>
+                <span>也支持直接 <kbd>⌘</kbd><kbd>V</kbd> 粘贴 · PNG / JPG / WebP</span>
+              </div>
+            </div>
+            <input type="file" id="img-file" accept="image/png,image/jpeg,image/webp" hidden>
+            <div id="img-preview"></div>
+            <div class="row">
+              <div style="flex:0 1 220px">
+                <label class="label" for="img-type">图片类型</label>
+                <select class="input" id="img-type">
+                  <option value="">自动判断</option>
+                  <option value="photo">照片</option><option value="product">产品图</option>
+                  <option value="poster">海报</option><option value="social">社交图</option>
+                  <option value="ui">界面截图</option><option value="illustration">插画</option>
+                  <option value="figure">图表</option><option value="ai">AI 生成图</option>
+                </select>
+              </div>
+              <div style="flex:1 1 auto"></div>
+              <button class="btn btn-primary" id="btn-img" style="align-self:flex-end;height:42px">
+                <svg class="i"><use href="#i-play"/></svg><span>开始审查</span>
+              </button>
+            </div>
+            <p class="hint" style="margin:0">输出调色板、三分构图辅助线、8 维度评分与 AI 伪影检查清单。</p>
+          </div>
+          <div class="card progress" id="progress-img" hidden>
+            <div class="stages">
+              <div class="stage" data-stage="0"><div class="bar"><i></i></div><span>读取图像</span></div>
+              <div class="stage" data-stage="1"><div class="bar"><i></i></div><span>色彩分析</span></div>
+              <div class="stage" data-stage="2"><div class="bar"><i></i></div><span>模型评审</span></div>
+            </div>
+            <div class="progress-meta">
+              <span id="progress-text-img">准备中…</span>
+              <span class="spacer"></span>
+              <span id="progress-time-img">0s</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 整站扫描 -->
+        <section class="pane-stack" data-pane="audit" hidden>
+          <div class="card card-pad">
+            <div class="field">
+              <label class="label" for="audit-url">站点首页</label>
+              <div class="audit-entry">
+                <div class="input-wrap">
+                  <svg class="i"><use href="#i-globe"/></svg>
+                  <input class="input" type="text" id="audit-url" placeholder="https://example.com"
+                    autocomplete="off" spellcheck="false">
+                </div>
+                <button class="btn btn-ghost" id="btn-discover" title="只爬链接，不跑 Lighthouse">
+                  <svg class="i"><use href="#i-target"/></svg><span>发现候选</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="discover-box" class="discover-box" hidden></div>
+
+            <div class="auth-line">
+              <span class="label" style="margin:0">登录态</span>
+              <span class="auth-chip" id="auth-chip">未配置 · 公开官网可留空</span>
+              <span class="spacer"></span>
+              <button class="btn btn-ghost btn-sm" id="btn-auth-toggle">配置</button>
+            </div>
+            <div id="auth-panel" class="auth-panel" hidden>
+              <p class="hint" style="margin:0 0 10px">
+                后台/管理系统必填。Lighthouse 每次都会起一个干净的浏览器，不带登录态只会测到登录页。
+                配了之后爬链接和逐页扫描都会带上。
+              </p>
+              <div class="field">
+                <label class="label" for="auth-cookie">Cookie 串</label>
+                <textarea class="input auth-ta" id="auth-cookie" rows="2"
+                  placeholder="浏览器 DevTools → Network → 任意请求 → Request Headers → 整段 cookie 复制过来"></textarea>
+              </div>
+              <div class="field" style="margin-top:10px">
+                <label class="label" for="auth-authz">Authorization 头（token 存 localStorage 的后台用这个）</label>
+                <textarea class="input auth-ta" id="auth-authz" rows="2"
+                  placeholder="Bearer eyJhbGciOiJIUzI1NiIs..."></textarea>
+              </div>
+              <div class="auth-actions">
+                <button class="btn btn-ghost btn-sm" id="btn-auth-login">浏览器登录一次</button>
+                <button class="btn btn-ghost btn-sm" id="btn-auth-derive">从登录态提取</button>
+                <span class="spacer"></span>
+                <button class="btn btn-ghost btn-sm" id="btn-auth-clear">清除</button>
+                <button class="btn btn-primary btn-sm" id="btn-auth-save">保存</button>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:18px">
+              <label class="label">要测的页面
+                <span class="label-note">分数跟着「页面模板」走，同一类测一页就够</span>
+              </label>
+              <div id="target-list" class="target-list"></div>
+              <div class="target-foot">
+                <button class="btn btn-ghost btn-sm" id="btn-add-target">
+                  <span>＋ 加一行</span>
+                </button>
+                <span class="spacer"></span>
+                <span class="hint" id="target-count">0 页</span>
+                <button class="btn btn-primary" id="btn-audit" style="height:38px">
+                  <svg class="i"><use href="#i-play"/></svg><span>开始扫描</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <p class="hint">逐页跑 Lighthouse，出性能 / 可访问性 / SEO / 最佳实践四张分表和全部红项，并按页面类型汇总——不同模板之间的分差才是改版的落点。不做视觉评审，那是「网站审查」的活。</p>
+
+          <div class="card progress" id="progress-audit" hidden>
+            <div class="progress-meta">
+              <span id="audit-progress-text">准备中…</span>
+              <span class="spacer"></span>
+              <span id="audit-progress-count">0/0</span>
+            </div>
+            <div class="stage" style="margin-top:10px"><div class="bar"><i id="audit-bar"></i></div></div>
+          </div>
+
+          <div id="audit-result"></div>
+        </section>
+
+        <!-- 审查记录 -->
+        <section class="pane-stack" data-pane="history" hidden>
+          <div class="hist-toolbar">
+            <div class="section-head" style="margin:0">
+              <h2>审查记录</h2>
+              <span class="sub" id="hist-sub">—</span>
+            </div>
+            <span class="spacer"></span>
+            <div class="filters" id="hist-filters" style="margin:0">
+              <button class="on" data-hf="all">全部</button>
+              <button data-hf="done">成功</button>
+              <button data-hf="error">失败</button>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="hist-refresh">
+              <svg class="i"><use href="#i-refresh"/></svg><span>刷新</span>
+            </button>
+          </div>
+          <div class="hist-list" id="hist-list"></div>
+        </section>
+
+        <!-- 模型配置 -->
+        <section class="pane-stack" data-pane="settings" hidden>
+          <div class="settings-grid">
+            <div class="card card-pad">
+              <div class="section-head"><h2>默认视觉模型</h2><span class="sub">审查时用这个模型看图打分</span></div>
+              <div class="row">
+                <div class="grow">
+                  <select class="input" id="cfg-model"></select>
+                </div>
+                <button class="btn btn-secondary" id="btn-test-model"><svg class="i"><use href="#i-play"/></svg>测试连通</button>
+                <button class="btn btn-primary" id="btn-save-model"><svg class="i"><use href="#i-check"/></svg>保存</button>
+              </div>
+              <p class="hint">模型列表来自 <code>~/.openclaw/openclaw.json</code> 的 providers，失败会自动换协议重试。</p>
+            </div>
+
+            <div class="card">
+              <div class="card-pad" style="padding-bottom:8px"><div class="section-head" style="margin:0"><h2>模型清单</h2><span class="sub" id="model-count"></span></div></div>
+              <div id="model-list" style="padding:0 0 8px"></div>
+            </div>
+
+            <div class="card card-pad">
+              <div class="section-head"><h2>添加自定义模型</h2><span class="sub">密钥只存本机 data/config.json</span></div>
+              <div class="form-grid">
+                <input class="input" type="text" id="cm-name" placeholder="显示名称">
+                <input class="input" type="text" id="cm-model" placeholder="模型 ID">
+                <input class="input" type="text" id="cm-base" placeholder="Base URL，如 https://api.minimaxi.com/v1">
+                <input class="input" type="text" id="cm-key" placeholder="API Key">
+                <select class="input" id="cm-api">
+                  <option value="openai-completions">OpenAI 兼容</option>
+                  <option value="anthropic-messages">Anthropic 协议</option>
+                </select>
+              </div>
+              <div class="row" style="margin-top:14px">
+                <button class="btn btn-secondary" id="btn-add-model"><svg class="i"><use href="#i-check"/></svg>添加模型</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="page-foot">
+          <span>Taste Lab · 本地运行 · 数据不出本机</span>
+          <span class="spacer"></span>
+          <span id="foot-model">模型加载中…</span>
+        </footer>
       </div>
-      <p class="hint">输出调色板、构图辅助线、8 维度评分与 AI 伪影检查清单。</p>
+
+      <!-- ---------------- 结果视图 ---------------- -->
+      <div id="view-result" style="display:none"></div>
     </div>
-
-    <div id="pane-settings" style="display:none">
-      <div class="row">
-        <select id="cfg-model" style="flex:1 1 420px"></select>
-        <button id="btn-test-model" class="ghost"><svg class="icon"><use href="#i-play"/></svg>测试连通</button>
-        <button id="btn-save-model"><svg class="icon"><use href="#i-check"/></svg>保存为默认</button>
-      </div>
-      <p class="hint" id="model-hint">模型列表来自 <code>~/.openclaw/openclaw.json</code> 的 providers。MiniMax 等同时支持 OpenAI 兼容与 Anthropic 两种协议，调用失败会自动换协议重试。</p>
-      <div class="settings-list" id="model-list"></div>
-
-      <h2 style="margin-top:30px"><svg class="icon"><use href="#i-spark"/></svg>添加自定义模型</h2>
-      <div class="row">
-        <input type="text" id="cm-name" placeholder="显示名称（如 我的视觉模型）">
-        <input type="text" id="cm-model" placeholder="模型 ID（如 MiniMax-M3.1-Flash-Preview）" style="flex:1 1 240px">
-        <input type="text" id="cm-base" placeholder="Base URL（如 https://api.minimaxi.com/v1）" style="flex:1 1 240px">
-        <input type="text" id="cm-key" placeholder="API Key" style="flex:1 1 180px">
-        <select id="cm-api">
-          <option value="openai-completions">OpenAI 兼容</option>
-          <option value="anthropic-messages">Anthropic 协议</option>
-        </select>
-        <button id="btn-add-model" class="ghost"><svg class="icon"><use href="#i-check"/></svg>添加</button>
-      </div>
-      <p class="hint">自定义模型保存在应用目录 <code>data/config.json</code>，密钥只存本机。</p>
-    </div>
-
-    <div class="status" id="status">
-      <div class="bar"><i></i></div>
-      <p id="status-text">正在采集与评审…</p>
-    </div>
-    <div id="error"></div>
-  </div>
-
-  <div class="result" id="result"></div>
-
-  <footer>Taste Lab · 本地运行 · <span id="footer-model">模型加载中…</span> · 数据不出本机</footer>
+  </main>
 </div>
 
-<script>
-const $ = (s) => document.querySelector(s);
-let mode = 'site';
-let currentModelId = '';
+<div class="toasts" id="toasts"></div>
 
-/* 主题切换 */
+<script>
+/* ============================== 基础 ============================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+
+const MODE_META = {
+  site: { title: '网站审查', desc: '采集截图与设计指标，交模型看图评分' },
+  image: { title: '图片审查', desc: '调色板、构图辅助线、八维评分' },
+  audit: { title: '整站扫描', desc: '多页性能 / 可访问性 / SEO / 最佳实践（Lighthouse）' },
+  history: { title: '审查记录', desc: '打开历史结果，不重复调用模型' },
+  settings: { title: '模型配置', desc: '默认模型、连通性测试、自定义接入' },
+};
+
+let mode = 'site';
+let lastFormMode = 'site';
+let MODELS = [];
+let currentModelId = '';
+let REF_FILES = [];
+let IMG_FILE = null;
+let HIST = [];
+let activeJob = null;      // { id, mode, startedAt, tick }
+let resultJobId = null;
+
+/* ============================== 提示 ============================== */
+function toast(msg, kind = 'ok', ms = 4200) {
+  const box = $('#toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (kind === 'err' ? 'err' : 'ok');
+  el.innerHTML = `<svg class="i"><use href="#${kind === 'err' ? 'i-alert' : 'i-check'}"/></svg><span>${esc(msg)}</span>`;
+  box.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, ms);
+}
+
+/* ============================== 主题 ============================== */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
-  try { localStorage.setItem('taste-lab-theme', t); } catch (e) {}
+  LS.set('taste-lab-theme', t);
   $('#theme-icon').innerHTML = `<use href="#i-${t === 'dark' ? 'sun' : 'moon'}"/>`;
-  $('#theme-label').textContent = t === 'dark' ? '浅色模式' : '深色模式';
+  $('#theme-label').textContent = t === 'dark' ? '深色' : '浅色';
 }
 $('#theme-toggle').addEventListener('click', () => {
   applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
 });
 applyTheme(document.documentElement.dataset.theme || 'dark');
 
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
-  t.classList.add('on');
-  mode = t.dataset.mode;
-  $('#pane-site').style.display = mode === 'site' ? '' : 'none';
-  $('#pane-image').style.display = mode === 'image' ? '' : 'none';
-  $('#pane-settings').style.display = mode === 'settings' ? '' : 'none';
-  $('#result').classList.remove('on');
-  $('#error').innerHTML = '';
-  if (mode === 'settings') loadModels();
-}));
+/* ============================== 导航 ============================== */
+function setMode(next) {
+  if (next === mode && $('#view-result').style.display === 'none') return;
+  mode = next;
+  if (next !== 'settings') lastFormMode = next;
+  $$('.nav-item').forEach((b) => {
+    const on = b.dataset.mode === next;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  $$('#view-form [data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== next; });
+  $('#view-result').style.display = 'none';
+  $('#view-form').style.display = '';
+  $('#page-title').textContent = MODE_META[next].title;
+  $('#page-desc').textContent = MODE_META[next].desc;
+  if (next === 'settings') loadModels();
+  if (next === 'history') loadHistory();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+$$('.nav-item').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+$('#model-chip').addEventListener('click', () => setMode('settings'));
 
-/* ---------------- 行业列表（中文显示，值为英文 key） ---------------- */
+/* ============================== 工具函数 ============================== */
+function normalizeUrl(raw) {
+  let u = String(raw || '').trim();
+  if (!u) return '';
+  if (!/^https?:\/\//i.test(u)) u = 'https://' + u.replace(/^\/+/, '');
+  return u;
+}
+function domainOf(u) {
+  try { return new URL(u).host.replace(/^www\./, ''); } catch (e) { return u || ''; }
+}
+function timeAgo(ts) {
+  if (!ts) return '';
+  const d = Math.floor((Date.now() - ts) / 1000);
+  if (d < 60) return '刚刚';
+  if (d < 3600) return Math.floor(d / 60) + ' 分钟前';
+  if (d < 86400) return Math.floor(d / 3600) + ' 小时前';
+  if (d < 86400 * 7) return Math.floor(d / 86400) + ' 天前';
+  const dt = new Date(ts);
+  return `${dt.getMonth() + 1}/${dt.getDate()}`;
+}
+function gradeOf(t) { return t >= 88 ? 'A' : t >= 78 ? 'B' : t >= 68 ? 'C' : t >= 58 ? 'D' : 'E'; }
+function gradeClass(g) { return 'g' + (String(g || 'E').toUpperCase()[0] || 'E'); }
+
+/* ============================== 行业 ============================== */
 async function loadIndustries() {
   try {
-    const r = await fetch('/api/industries').then(r => r.json());
-    const sel = $('#site-industry');
-    sel.innerHTML = r.industries.map(i =>
-      `<option value="${i.en}">${i.zh}${i.en ? '' : ''}</option>`).join('');
-  } catch (e) { /* ignore */ }
+    const d = await fetch('/api/industries').then((r) => r.json());
+    $('#site-industry').innerHTML = (d.industries || [])
+      .map((i) => `<option value="${esc(i.en)}">${esc(i.zh)}</option>`).join('');
+  } catch (e) { /* 静默：行业只是可选基准 */ }
 }
 loadIndustries();
 
-/* ---------------- 模型列表 & 配置 ---------------- */
-let MODELS = [];
+/* ============================== 模型 ============================== */
 async function loadModels() {
-  const d = await fetch('/api/models').then(r => r.json()).catch(() => null);
-  if (!d) return;
+  let d;
+  try { d = await fetch('/api/models').then((r) => r.json()); } catch (e) { toast('模型列表加载失败', 'err'); return; }
   MODELS = d.models || [];
-  const sel = $('#cfg-model');
-  const cur = d.current;
-  sel.innerHTML = MODELS.map(m => {
+  currentModelId = d.current || '';
+  $('#cfg-model').innerHTML = MODELS.map((m) => {
     const tag = m.image ? '支持图片' : '仅文字';
-    const api = m.api === 'anthropic-messages' ? 'Anthropic' : 'OpenAI兼容';
-    return `<option value="${m.id}"${m.id === cur ? ' selected' : ''}>${m.name} — ${tag} · ${api}</option>`;
+    const api = m.api === 'anthropic-messages' ? 'Anthropic' : 'OpenAI 兼容';
+    return `<option value="${esc(m.id)}"${m.id === currentModelId ? ' selected' : ''}>${esc(m.name)} — ${tag} · ${api}</option>`;
   }).join('');
-  $('#model-list').innerHTML = MODELS.map(m => `
+  $('#model-list').innerHTML = MODELS.map((m) => `
     <div class="model-row">
-      <div><b>${m.name}</b><span class="mono">${m.id}</span></div>
-      <div class="model-meta">
-        <span class="pill ${m.image ? 'pill-ok' : 'pill-warn'}">${m.image ? '支持图片' : '仅文字'}</span>
-        <span class="pill">${m.api === 'anthropic-messages' ? 'Anthropic 协议' : 'OpenAI 兼容'}</span>
-        <span class="pill">${m.baseUrl}</span>
-        ${m.custom ? `<button class="ghost mini" data-del-model="${m.id}">删除</button>` : ''}
+      <div>
+        <div class="name">${esc(m.name)}</div>
+        <div class="mid">${esc(m.id)}</div>
       </div>
-    </div>`).join('');
-  currentModelId = cur;
-  $('#footer-model').textContent = '视觉模型 ' + cur;
-  document.querySelectorAll('[data-del-model]').forEach(b => b.addEventListener('click', async () => {
+      <div class="meta">
+        <span class="chip ${m.image ? 'chip-ok' : 'chip-warn'}">${m.image ? '支持图片' : '仅文字'}</span>
+        <span class="chip">${m.api === 'anthropic-messages' ? 'Anthropic' : 'OpenAI 兼容'}</span>
+        ${m.custom ? `<button class="btn btn-ghost btn-sm btn-icon" data-del-model="${esc(m.id)}" title="删除"><svg class="i"><use href="#i-trash"/></svg></button>` : ''}
+      </div>
+    </div>`).join('') || '<div class="empty"><b>暂无可用模型</b></div>';
+  $('#model-count').textContent = MODELS.length + ' 个';
+  const cur = MODELS.find((m) => m.id === currentModelId);
+  const label = cur ? cur.name : currentModelId || '未配置';
+  $('#model-chip-txt').textContent = label;
+  $('#model-chip').title = '当前视觉模型：' + label + ' · 点击配置';
+  $('#foot-model').textContent = '视觉模型 ' + label;
+  $$('[data-del-model]').forEach((b) => b.addEventListener('click', async () => {
+    if (!confirm('删除自定义模型 ' + b.dataset.delModel + ' ?')) return;
     await fetch('/api/config/custom-model/' + encodeURIComponent(b.dataset.delModel), { method: 'DELETE' });
+    toast('已删除');
     loadModels();
   }));
 }
@@ -206,22 +547,25 @@ loadModels();
 
 $('#btn-save-model').addEventListener('click', async () => {
   const model = $('#cfg-model').value;
-  await fetch('/api/config', {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ model }),
-  });
-  $('#footer-model').textContent = '视觉模型 ' + model;
-  fail2('已保存默认模型：' + model);
+  try {
+    await fetch('/api/config', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model }) });
+    currentModelId = model;
+    toast('已保存默认模型');
+    loadModels();
+  } catch (e) { toast('保存失败：' + e.message, 'err'); }
 });
 
-$('#btn-test-model').addEventListener('click', async () => {
+$('#btn-test-model').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
   const model = $('#cfg-model').value;
-  fail2('正在测试 ' + model + ' …');
-  const r = await fetch('/api/config/test-model', {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ model }),
-  }).then(r => r.json()).catch(e => ({ ok: false, error: String(e) }));
-  fail2(r.ok ? '✓ 连通正常：' + (r.reply || '').slice(0, 60) : '✗ 连通失败：' + (r.error || '未知错误'), true);
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin" style="width:12px;height:12px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--brand);animation:spin .8s linear infinite"></span><span>测试中…</span>';
+  try {
+    const r = await fetch('/api/config/test-model', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model }) }).then((x) => x.json());
+    toast(r.ok ? '连通正常：' + String(r.reply || '').slice(0, 40) : '连通失败：' + (r.error || '未知'), r.ok ? 'ok' : 'err');
+  } catch (err) { toast('连通失败：' + err.message, 'err'); }
+  btn.disabled = false;
+  btn.innerHTML = '<svg class="i"><use href="#i-play"/></svg>测试连通';
 });
 
 $('#btn-add-model').addEventListener('click', async () => {
@@ -232,274 +576,1111 @@ $('#btn-add-model').addEventListener('click', async () => {
     apiKey: $('#cm-key').value.trim(),
     api: $('#cm-api').value,
   };
-  if (!body.model || !body.baseUrl) return fail2('需要填写模型 ID 和 Base URL');
-  const r = await fetch('/api/config/custom-model', {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
-  }).then(r => r.json());
-  fail2(r.ok ? '✓ 已添加：' + r.model.id : '✗ ' + (r.error || '添加失败'), true);
-  if (r.ok) { $('#cm-name').value = ''; $('#cm-key').value = ''; loadModels(); }
+  if (!body.model || !body.baseUrl) return toast('需要填写模型 ID 和 Base URL', 'err');
+  try {
+    const r = await fetch('/api/config/custom-model', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then((x) => x.json());
+    if (r.ok) {
+      toast('已添加：' + r.model.id);
+      ['#cm-name', '#cm-key', '#cm-model', '#cm-base'].forEach((s) => { $(s).value = ''; });
+      loadModels();
+    } else toast(r.error || '添加失败', 'err');
+  } catch (e) { toast('添加失败：' + e.message, 'err'); }
 });
 
-/* ---------------- 登录态（后台类应用） ---------------- */
-$('#site-url').addEventListener('change', checkAuth);
+/* ============================== 登录态 ============================== */
+let authTimer = null;
+function scheduleAuthCheck() {
+  clearTimeout(authTimer);
+  authTimer = setTimeout(checkAuth, 500);
+}
+$('#site-url').addEventListener('input', scheduleAuthCheck);
 $('#site-url').addEventListener('blur', checkAuth);
 
 async function checkAuth() {
-  const url = $('#site-url').value.trim();
-  if (!url) return;
+  const url = normalizeUrl($('#site-url').value);
   const el = $('#auth-state');
-  el.textContent = '检查登录态…';
+  if (!url) { el.textContent = '未检查登录态'; el.className = 'chip'; return; }
   try {
-    const d = await fetch('/api/auth-state?url=' + encodeURIComponent(url)).then(r => r.json());
-    el.textContent = d.hasAuth ? '已保存登录态，审查会自动带上' : '无登录态（若为后台应用需先登录）';
-    el.className = 'auth-state ' + (d.hasAuth ? 'ok' : 'warn');
-  } catch (e) {
-    el.textContent = '登录态检查失败';
-  }
+    const d = await fetch('/api/auth-state?url=' + encodeURIComponent(url)).then((r) => r.json());
+    if (d.hasAuth) { el.innerHTML = '<svg class="i"><use href="#i-lock"/></svg>已保存登录态'; el.className = 'chip chip-ok'; }
+    else { el.innerHTML = '<svg class="i"><use href="#i-lock"/></svg>无登录态'; el.className = 'chip'; }
+  } catch (e) { el.textContent = '登录态检查失败'; el.className = 'chip chip-warn'; }
 }
 
 $('#btn-login').addEventListener('click', async () => {
-  const url = $('#site-url').value.trim();
-  if (!url) return fail2('请先填写要登录的网址');
+  const url = normalizeUrl($('#site-url').value);
+  if (!url) return toast('请先填写要登录的网址', 'err');
   const hint = $('#login-hint');
-  hint.style.display = '';
-  hint.innerHTML = '正在打开浏览器窗口，请在弹出的窗口里完成登录…';
-  const r = await fetch('/api/auth/login', {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ url }),
-  }).then(r => r.json()).catch(e => ({ error: String(e) }));
-  if (r.error) { hint.innerHTML = '启动失败：' + r.error; return; }
-  const t = setInterval(async () => {
-    const d = await fetch('/api/auth-state?url=' + encodeURIComponent(url)).then(r => r.json()).catch(() => null);
-    if (d && d.hasAuth) {
-      clearInterval(t);
-      hint.innerHTML = '✓ 登录态已保存，之后审查会自动带上。';
-      checkAuth();
-    }
-  }, 3000);
+  hint.textContent = '正在打开浏览器窗口，请完成登录…';
+  try {
+    const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url }) }).then((x) => x.json());
+    if (r.error) { hint.textContent = '启动失败：' + r.error; return; }
+    const t = setInterval(async () => {
+      const d = await fetch('/api/auth-state?url=' + encodeURIComponent(url)).then((x) => x.json()).catch(() => null);
+      if (d && d.hasAuth) {
+        clearInterval(t);
+        hint.textContent = '';
+        toast('登录态已保存，之后审查会自动带上');
+        checkAuth();
+      }
+    }, 3000);
+  } catch (e) { hint.textContent = '启动失败：' + e.message; }
 });
 
-/* ---------------- 对标参考：截图收集 ---------------- */
-const REF_FILES = [];
-$('#ref-files').addEventListener('change', async (e) => {
-  REF_FILES.length = 0;
-  for (const f of e.target.files) REF_FILES.push(f);
+/* ============================== 对标参考 ============================== */
+$('#ref-drop').addEventListener('click', () => $('#ref-files').click());
+$('#ref-files').addEventListener('change', (e) => {
+  REF_FILES = Array.from(e.target.files || []);
   renderRefThumbs();
 });
+function addRefFiles(files) {
+  for (const f of files) {
+    if (!/^image\//.test(f.type)) continue;
+    if (REF_FILES.some((x) => x.name === f.name && x.size === f.size)) continue;
+    REF_FILES.push(f);
+  }
+  renderRefThumbs();
+}
 function renderRefThumbs() {
   const box = $('#ref-thumbs');
-  if (!REF_FILES.length) { box.innerHTML = ''; return; }
-  box.innerHTML = REF_FILES.map((f, i) =>
-    `<figure class="ref-thumb"><img src="${URL.createObjectURL(f)}" alt=""><figcaption>${f.name}</figcaption></figure>`).join('');
+  box.innerHTML = REF_FILES.map((f, i) => `
+    <figure class="thumb">
+      <img src="${URL.createObjectURL(f)}" alt="">
+      <button class="x" data-rm-ref="${i}" title="移除"><svg class="i"><use href="#i-x"/></svg></button>
+      <figcaption>${esc(f.name)}</figcaption>
+    </figure>`).join('');
+  $$('[data-rm-ref]').forEach((b) => b.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    REF_FILES.splice(Number(b.dataset.rmRef), 1);
+    renderRefThumbs();
+  }));
 }
 async function collectReference() {
-  const url = $('#ref-url').value.trim();
+  const url = normalizeUrl($('#ref-url').value);
   const notes = $('#ref-notes').value.trim();
   if (!url && !notes && !REF_FILES.length) return null;
   const images = [];
   for (const f of REF_FILES) {
-    const dataUrl = await new Promise(res => {
-      const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f);
-    });
+    const dataUrl = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f); });
     images.push({ dataUrl, name: f.name });
   }
   return { url, notes, images };
 }
 
-$('#btn-site').addEventListener('click', async () => {
-  const url = $('#site-url').value.trim();
-  if (!url) return fail('请输入网址');
+/* ============================== 图片选择 / 拖拽 / 粘贴 ============================== */
+function setImage(file) {
+  if (!file || !/^image\//.test(file.type)) return toast('请选择图片文件', 'err');
+  IMG_FILE = file;
+  $('#img-drop').hidden = true;
+  $('#img-preview').innerHTML = `
+    <div class="preview">
+      <img src="${URL.createObjectURL(file)}" alt="">
+      <div style="flex:1 1 auto;min-width:0">
+        <div class="hist-title">${esc(file.name)}</div>
+        <div class="hist-meta">${(file.size / 1024 / 1024).toFixed(2)} MB · ${esc(file.type)}</div>
+        <button class="btn btn-ghost btn-sm" id="img-clear" style="margin-top:8px;padding-left:0"><svg class="i"><use href="#i-x"/></svg>移除</button>
+      </div>
+    </div>`;
+  $('#img-clear').addEventListener('click', () => {
+    IMG_FILE = null;
+    $('#img-preview').innerHTML = '';
+    $('#img-file').value = '';
+    $('#img-drop').hidden = false;
+  });
+}
+$('#img-drop').addEventListener('click', () => $('#img-file').click());
+$('#img-file').addEventListener('change', (e) => setImage(e.target.files[0]));
+
+['#img-drop', '#ref-drop'].forEach((sel) => {
+  const el = $(sel);
+  el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('over'));
+  el.addEventListener('drop', (e) => {
+    e.preventDefault();
+    el.classList.remove('over');
+    const files = Array.from(e.dataTransfer.files || []);
+    if (sel === '#img-drop') setImage(files[0]);
+    else { addRefFiles(files); $('#ref-box').open = true; }
+  });
+});
+document.addEventListener('paste', (e) => {
+  if (mode !== 'image') return;
+  const item = Array.from(e.clipboardData?.items || []).find((i) => i.type.startsWith('image/'));
+  if (item) { setImage(item.getAsFile()); toast('已粘贴图片'); }
+});
+
+/* ============================== 提交审查 ============================== */
+async function submitSite() {
+  const url = normalizeUrl($('#site-url').value);
+  if (!url) return toast('请输入要审查的网址', 'err');
+  $('#site-url').value = url;
+  LS.set('tl-last-url', url);
   const reference = await collectReference();
   const payload = { url, industry: $('#site-industry').value, mobile: true, model: currentModelId };
   if (reference) payload.reference = reference;
-  start('/api/review/site', payload);
-});
-
-$('#btn-img').addEventListener('click', async () => {
-  const f = $('#img-file').files[0];
-  if (!f) return fail('请选择图片');
-  const dataUrl = await new Promise(res => {
-    const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f);
-  });
-  start('/api/review/image', { dataUrl, filename: f.name, type: $('#img-type').value, model: currentModelId });
-});
-
-function fail(msg) { $('#error').innerHTML = `<div class="error">${msg}</div>`; }
-function fail2(msg, ok) {
-  const el = $('#error');
-  el.innerHTML = `<div class="notice${ok ? ' ok' : ''}">${msg}</div>`;
-  setTimeout(() => { if (el.querySelector('.notice')) el.innerHTML = ''; }, 6000);
+  run('/api/review/site', payload, 'site');
 }
 
-function start(endpoint, payload) {
-  $('#error').innerHTML = '';
-  $('#result').classList.remove('on');
-  $('#status').classList.add('on');
-  $('#status-text').textContent = '正在采集页面指标…';
-  setBusy(true);
-  fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
-    .then(r => r.json())
-    .then(d => { if (d.error) throw new Error(d.error); return d; })
-    .then(d => poll(d.id))
-    .catch(e => { $('#status').classList.remove('on'); fail(e.message); })
-    .finally(() => setBusy(false));
+async function submitImage() {
+  if (!IMG_FILE) return toast('请先选择图片', 'err');
+  const dataUrl = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(IMG_FILE); });
+  run('/api/review/image', { dataUrl, filename: IMG_FILE.name, type: $('#img-type').value, model: currentModelId }, 'image');
 }
 
-function poll(id) {
-  const tick = () => fetch('/api/job/' + id).then(r => r.json()).then(j => {
-    if (j.status === 'running') {
-      $('#status-text').textContent = j.mode === 'site'
-        ? '已采集指标，模型正在看图打分（通常 40–120 秒）…'
-        : '已提取图像指标，模型正在评审…';
-      setTimeout(tick, 2000);
-    } else if (j.status === 'error') {
-      $('#status').classList.remove('on');
-      fail(j.error);
-    } else {
-      $('#status').classList.remove('on');
-      render(j.result, j.mode, id);
+$('#btn-site').addEventListener('click', submitSite);
+$('#btn-img').addEventListener('click', submitImage);
+
+$('#site-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitSite(); } });
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    if (mode === 'site') submitSite();
+    else if (mode === 'image') submitImage();
+  }
+});
+
+function progressEls(m) {
+  return m === 'site'
+    ? { box: $('#progress'), text: $('#progress-text'), time: $('#progress-time'), stages: $$('#progress .stage') }
+    : { box: $('#progress-img'), text: $('#progress-text-img'), time: $('#progress-time-img'), stages: $$('#progress-img .stage') };
+}
+
+async function run(endpoint, payload, m) {
+  const p = progressEls(m);
+  const btn = m === 'site' ? $('#btn-site') : $('#btn-img');
+  const btnHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span style="width:12px;height:12px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--brand-ink);animation:spin .8s linear infinite"></span><span>审查中</span>';
+  p.box.hidden = false;
+  p.stages.forEach((s) => { s.className = 'stage'; });
+  p.stages[0].classList.add('active');
+  p.text.textContent = m === 'site' ? '正在用无头浏览器采集页面…' : '正在读取图像…';
+
+  const startedAt = Date.now();
+  let stage = 0;
+  const tick = setInterval(() => {
+    const s = Math.floor((Date.now() - startedAt) / 1000);
+    p.time.textContent = s + 's';
+    const next = s < 10 ? 0 : s < 22 ? 1 : 2;
+    if (next !== stage) {
+      stage = next;
+      p.stages.forEach((x, i) => {
+        x.classList.toggle('done', i < stage);
+        x.classList.toggle('active', i === stage);
+      });
+      p.text.textContent = m === 'site'
+        ? ['正在用无头浏览器采集页面…', '正在量化颜色 / 字体 / 层级 / 对比度…', '模型正在看图打分（通常 40–120 秒）…'][stage]
+        : ['正在读取图像…', '正在提取调色板与构图…', '模型正在评审…'][stage];
     }
-  });
-  tick();
+  }, 500);
+
+  try {
+    const d = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) }).then((r) => r.json());
+    if (d.error) throw new Error(d.error);
+    activeJob = { id: d.id, mode: m, startedAt };
+    poll(d.id, m, startedAt, p);
+  } catch (e) {
+    clearInterval(tick);
+    p.box.hidden = true;
+    toast(e.message || '提交失败', 'err');
+    btn.disabled = false;
+    btn.innerHTML = btnHtml;
+    activeJob = null;
+  }
 }
 
-function setBusy(b) { document.querySelectorAll('button').forEach(x => x.disabled = b); }
+function poll(id, m, startedAt, p) {
+  const tickPoll = async () => {
+    let j;
+    try { j = await fetch('/api/job/' + id).then((r) => r.json()); } catch (e) { setTimeout(tickPoll, 2500); return; }
+    if (j.status === 'running') { setTimeout(tickPoll, 1800); return; }
 
-function gradeOf(t) { return t >= 88 ? 'A' : t >= 78 ? 'B' : t >= 68 ? 'C' : t >= 58 ? 'D' : 'E'; }
+    p.box.hidden = true;
+    activeJob = null;
+    const btn = m === 'site' ? $('#btn-site') : $('#btn-img');
+    btn.disabled = false;
+    btn.innerHTML = m === 'site'
+      ? '<svg class="i"><use href="#i-play"/></svg><span>开始审查</span>'
+      : '<svg class="i"><use href="#i-play"/></svg><span>开始审查</span>';
 
-function render(res, m, jobId) {
+    loadHistory(true);
+    if (j.status === 'error') return toast(j.error || '审查失败', 'err', 8000);
+    showResult(j, m, id);
+    toast('审查完成 · ' + Math.round((Date.now() - startedAt) / 1000) + 's');
+  };
+  tickPoll();
+}
+
+/* ============================== 结果视图 ============================== */
+function sectionBar(label, value, color) {
+  return `<div class="bar-line"><span>${label}</span><div class="track"><i style="width:${Math.max(0, Math.min(100, value))}%;background:${color}"></i></div><b>${value}</b></div>`;
+}
+
+/* 截图查看器：可选叠加一个定位框（坐标是页面的 CSS 像素，和截图 1:1） */
+function openShot(src, box) {
+  const prev = document.querySelector('.lightbox');
+  if (prev) prev.remove();
+  const wrap = document.createElement('div');
+  wrap.className = 'lightbox';
+  const stage = document.createElement('div');
+  stage.className = 'lb-stage';
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = '';
+  stage.appendChild(img);
+  wrap.appendChild(stage);
+  const close = document.createElement('button');
+  close.className = 'lb-close';
+  close.innerHTML = '<svg class="i"><use href="#i-x"/></svg>';
+  wrap.appendChild(close);
+
+  function drawBox() {
+    if (!box) return;
+    const scale = img.clientWidth / (img.naturalWidth || 1440);
+    const r = document.createElement('div');
+    r.className = 'lb-box';
+    r.style.left = Math.round(box.x * scale) + 'px';
+    r.style.top = Math.round(box.y * scale) + 'px';
+    r.style.width = Math.round(box.w * scale) + 'px';
+    r.style.height = Math.round(box.h * scale) + 'px';
+    stage.appendChild(r);
+    wrap.scrollTop = Math.max(0, wrap.scrollTop + r.getBoundingClientRect().top - 140);
+  }
+  if (img.complete && img.naturalWidth) requestAnimationFrame(drawBox);
+  else img.onload = () => requestAnimationFrame(drawBox);
+
+  const dismiss = () => wrap.remove();
+  wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target === close || close.contains(e.target)) dismiss(); });
+  document.addEventListener('keydown', function onEsc(e) {
+    if (e.key === 'Escape') { dismiss(); document.removeEventListener('keydown', onEsc); }
+  });
+  document.body.appendChild(wrap);
+}
+
+/* 问题缩略图：直接把"说的那块"裁出来，点开看整页定位 */
+function issueThumb(id, a) {
+  const CW = 176, CH = 104;
+  const b = a.box;
+  const s = Math.max(0.08, Math.min((CW - 18) / Math.max(b.w, 60), (CH - 18) / Math.max(b.h, 40), 0.45));
+  const ox = Math.max(0, b.x - (CW / s - b.w) / 2);
+  const oy = Math.max(0, b.y - (CH / s - b.h) / 2);
+  const url = `/runs/${esc(id)}/${esc(a.shot)}`;
+  return `<button class="issue-shot btn-locate" data-shot="${url}"
+      data-x="${b.x}" data-y="${b.y}" data-w="${b.w}" data-h="${b.h}" title="点开在整页截图上定位这块">
+    <img src="${url}" alt="" style="width:1440px;transform:scale(${s.toFixed(3)}) translate(${-ox}px,${-oy}px)">
+    <span class="is-box" style="left:${Math.round((b.x - ox) * s)}px;top:${Math.round((b.y - oy) * s)}px;width:${Math.max(8, Math.round(b.w * s))}px;height:${Math.max(8, Math.round(b.h * s))}px"></span>
+    <span class="is-tag">图上位置</span>
+  </button>`;
+}
+
+function showResult(job, m, id) {
+  const res = job.result || {};
   const v = res.visual || {};
   const mtr = res.metrics || {};
-  const total = Number(v.total_score ?? 0);
-  const visual = Number(v.visual_score ?? 0) * 10;
-  const metric = Number(v.metric_score ?? mtr.metric_score ?? 0);
-  const PRI_ICON = { P0: 'i-alert', P1: 'i-info', P2: 'i-check' };
-  const issues = (v.issues || []).map(i => `
-    <div class="issue ${i.priority || 'P2'}">
-      <div class="tag"><svg class="icon"><use href="#${PRI_ICON[i.priority] || 'i-info'}"/></svg>${i.priority || 'P2'} · ${i.area || ''}</div>
-      <h3>${i.problem || ''}</h3>
-      ${i.fix ? `<p class="fix"><b>改法：</b>${i.fix}</p>` : ''}
-    </div>`).join('');
+  const total = Math.round(Number(v.total_score ?? 0));
+  const visual = Math.round(Number(v.visual_score ?? 0) * 10);
+  const metric = Math.round(Number(v.metric_score ?? mtr.metric_score ?? 0));
+  const grade = String(v.grade || gradeOf(total)).toUpperCase()[0];
+  const C = 2 * Math.PI * 52;
+  const offset = C * (1 - Math.max(0, Math.min(100, total)) / 100);
+  const isSite = (m || job.mode) === 'site';
+  const title = isSite ? (mtr.title || domainOf((job.input || {}).url || '') || '网站审查') : ((job.input || {}).filename || '图片审查');
+  resultJobId = id;
 
-  const shots = (res.images || []).map(f =>
-    `<figure class="shot"><img src="/runs/${jobId}/${f}" alt="${f}"><figcaption>${f}</figcaption></figure>`).join('');
+  const anns = res.annotations || [];
+  const issues = (v.issues || []).map((it, i) => {
+    const pri = String(it.priority || 'P2').toUpperCase();
+    const a = anns[i];
+    const thumb = a && a.box ? issueThumb(id, a) : '';
+    return `<div class="issue ${pri.toLowerCase()}" data-pri="${pri}">
+      <div class="issue-head">
+        <span class="pri ${pri.toLowerCase()}">${pri}</span>
+        <span class="issue-area">${esc(it.area || '')}</span>
+        ${it.region ? `<span class="issue-region">${esc(it.region)}</span>` : ''}
+      </div>
+      <div class="issue-body">
+        <div class="issue-text">
+          <h4>${esc(it.problem || '')}</h4>
+          ${it.fix ? `<p class="fix"><b>改法</b>${esc(it.fix)}</p>` : ''}
+          ${a && a.box ? `<p class="issue-anchor">定位依据：页面上「${esc(a.text || '')}」</p>` : ''}
+        </div>
+        ${thumb}
+      </div>
+    </div>`;
+  }).join('');
+  const counts = { P0: 0, P1: 0, P2: 0 };
+  (v.issues || []).forEach((it) => { const k = String(it.priority || 'P2').toUpperCase(); if (counts[k] != null) counts[k]++; });
 
-  const t = v.tokens || {};
-  const tokenRows = Object.entries(t).filter(([, x]) => x !== undefined && x !== null && x !== '').map(([k, x]) =>
-    `<div class="token"><b>${k}</b><span>${x}</span></div>`).join('');
+  const shots = (res.images || []).map((f) =>
+    `<figure class="shot" data-shot="/runs/${esc(id)}/${esc(f)}"><img src="/runs/${esc(id)}/${esc(f)}" alt="${esc(f)}" loading="lazy"><figcaption>${esc(f)}</figcaption></figure>`).join('');
 
-  const strengths = (v.strengths || []).map(s => `<li><svg class="icon"><use href="#i-check"/></svg>${s}</li>`).join('');
-  const nexts = (v.next_actions || []).map(s => `<li><svg class="icon"><use href="#i-spark"/></svg>${s}</li>`).join('');
+  /* 指标事实：把"哪些量准了、哪些没测到"摊在明面上，避免拿假数据说结论 */
+  const DIM_ZH = { color: '色彩', type: '字号', consist: '一致性', hier: '层级', access: '可访问性' };
+  const DTYPE = { color: '颜色', 'font-size': '字号', radius: '圆角', 'font-family': '字体', 'body-size': '正文' };
+  const dims = mtr.dimensions || {};
+  const unmeasured = Object.entries(dims).filter(([, d]) => d && d.measured === false).map(([k]) => DIM_ZH[k] || k);
+  const mfacts = isSite ? `<div class="mfacts">
+    ${mtr.pageTypeZh ? `<span><b>页面类型</b>${esc(mtr.pageTypeZh)}</span>` : ''}
+    ${mtr.colorsRawTotal ? `<span><b>颜色</b>${mtr.colorsRawTotal} → ${mtr.colorsTotal} 个色簇</span>` : ''}
+    ${mtr.bodySize ? `<span><b>正文</b>${esc(String(mtr.bodySize))}px</span>` : '<span><b>正文</b>未识别</span>'}
+    ${mtr.contrastP50 ? `<span><b>对比度 P50</b>${Number(mtr.contrastP50).toFixed(1)}:1</span>` : '<span><b>对比度</b>未测</span>'}
+    ${mtr.belowAAShare != null ? `<span><b>低于 AA</b>${Math.round(Number(mtr.belowAAShare) * 100)}%</span>` : ''}
+    ${unmeasured.length ? `<span class="warn"><b>未测维度</b>${unmeasured.join('、')}（权重已让给已测维度）</span>` : ''}
+  </div>` : '';
 
-  /* ---------------- 对标借鉴板块 ---------------- */
+  const tokens = Object.entries(v.tokens || {}).filter(([, x]) => x !== undefined && x !== null && x !== '')
+    .map(([k, x]) => `<div class="token"><b>${esc(k)}</b><span>${esc(x)}</span></div>`).join('');
+
+  const strengths = (v.strengths || []).map((s) => `<li><svg class="i"><use href="#i-check"/></svg>${esc(s)}</li>`).join('');
+  const nexts = (v.next_actions || []).map((s) => `<li><svg class="i"><use href="#i-spark"/></svg>${esc(s)}</li>`).join('');
+
+  /* 对标借鉴 */
   const ref = res.reference || null;
-  const borrow = v.borrow || [];
-  const principles = ref?.analysis?.principles || [];
   let refBlock = '';
   if (ref) {
-    const sig = ref.analysis?.signature || [];
-    const avoid = ref.analysis?.avoid || [];
-    const principleRows = principles.map(p => `
-      <div class="principle">
-        <b>${p.name || ''}</b>
-        <div class="principle-part"><span>原理</span><p>${p.principle || ''}</p></div>
-        <div class="principle-part"><span>证据</span><p>${p.evidence || ''}</p></div>
-        <div class="principle-part"><span>迁移做法</span><p>${p.how_to_apply || ''}</p></div>
-      </div>`).join('');
-    const borrowRows = borrow.map(b => `
-      <div class="borrow">
-        <div class="borrow-from"><svg class="icon"><use href="#i-target"/></svg><span>${b.from || ''}</span></div>
-        <div class="borrow-ours"><span>我们缺</span><p>${b.ours || ''}</p></div>
-        <div class="borrow-how"><span>怎么改</span><p>${b.how || ''}</p></div>
-      </div>`).join('');
+    const principles = (ref.analysis && ref.analysis.principles) || [];
+    const sig = (ref.analysis && ref.analysis.signature) || [];
+    const avoid = (ref.analysis && ref.analysis.avoid) || [];
+    const borrow = v.borrow || [];
     refBlock = `
-      <h2><svg class="icon"><use href="#i-target"/></svg>对标借鉴</h2>
-      <p class="summary">${ref.analysis?.summary || '（参考对象分析失败）'}</p>
-      ${ref.url ? `<p class="meta">参考对象：${ref.url}</p>` : ''}
-      ${ref.analysisError ? `<div class="banner banner-warn"><b>⚠️ 参考对象分析失败</b>${ref.analysisError}</div>` : ''}
-      ${ref.urlError ? `<div class="banner banner-warn"><b>⚠️ 参考网址采集失败</b>${ref.urlError}</div>` : ''}
-      ${principleRows ? `<h2>参考对象值得学的手法</h2><div class="principles">${principleRows}</div>` : ''}
-      ${sig.length ? `<div class="ref-tags"><b>签名元素</b>${sig.map(x => `<span>${x}</span>`).join('')}</div>` : ''}
-      ${avoid.length ? `<div class="ref-tags"><b>不该照搬</b>${avoid.map(x => `<span>${x}</span>`).join('')}</div>` : ''}
-      ${borrowRows ? `<h2>我们该怎么改（借鉴到本页面）</h2><div class="borrows">${borrowRows}</div>` : ''}
-    `;
+      <div class="block" id="r-ref">
+        <h3><svg class="i"><use href="#i-target"/></svg>对标借鉴</h3>
+        <p class="prose">${esc((ref.analysis && ref.analysis.summary) || '（参考对象分析失败）')}</p>
+        ${ref.url ? `<p class="result-meta" style="margin-top:6px">参考对象 ${esc(ref.url)}</p>` : ''}
+        ${ref.analysisError ? `<div class="banner" style="margin-top:12px"><svg class="i"><use href="#i-alert"/></svg><span><b>参考对象分析失败</b>${esc(ref.analysisError)}</span></div>` : ''}
+        ${ref.urlError ? `<div class="banner" style="margin-top:12px"><svg class="i"><use href="#i-alert"/></svg><span><b>参考网址采集失败</b>${esc(ref.urlError)}</span></div>` : ''}
+        ${principles.length ? `<div style="margin-top:14px">${principles.map((p) => `
+          <div class="principle">
+            <b>${esc(p.name || '')}</b>
+            <div class="kv"><span>原理</span><p>${esc(p.principle || '')}</p></div>
+            <div class="kv"><span>证据</span><p>${esc(p.evidence || '')}</p></div>
+            <div class="kv"><span>迁移做法</span><p>${esc(p.how_to_apply || '')}</p></div>
+          </div>`).join('')}</div>` : ''}
+        ${sig.length ? `<div class="tags"><b>签名元素</b>${sig.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
+        ${avoid.length ? `<div class="tags"><b>不该照搬</b>${avoid.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
+        ${borrow.length ? `<div style="margin-top:14px">${borrow.map((b) => `
+          <div class="borrow">
+            <div class="from"><svg class="i"><use href="#i-target"/></svg>${esc(b.from || '')}</div>
+            <div class="kv"><span>我们缺</span><p>${esc(b.ours || '')}</p></div>
+            <div class="kv"><span>怎么改</span><p>${esc(b.how || '')}</p></div>
+          </div>`).join('')}</div>` : ''}
+      </div>`;
   }
 
-  const loginWarn = res.loginWall ? `
-    <div class="banner banner-warn">
-      <b>⚠️ 采集到的是登录页 / 后台鉴权页</b>
-      这次的分数不代表真实业务界面。若要审后台应用内部，请先在「网站审查」页点「登录并保存会话」完成登录，再重新审查。
-    </div>` : '';
-  const serifWarn = (mtr.serifCharShare >= 0.2) ? `
-    <div class="banner banner-warn">
-      <b>⚠️ 检测到衬线中文字体${(mtr.serifFonts || []).length ? '：' + mtr.serifFonts.join('、') : ''}（占比 ${Math.round((mtr.serifCharShare||0)*100)}%）</b>
-      中文网页正文应改用黑体族（思源黑体 / 苹方 / 微软雅黑），宋体/仿宋/楷体属于过时选择。
-    </div>` : '';
-
-  $('#result').innerHTML = `
-    ${loginWarn}${serifWarn}
-    <div class="score-head">
-      <div>
-        <div class="big-score">${total}<small>/100</small></div>
-      </div>
-      <div>
-        <div class="grade"><svg class="icon"><use href="#i-target"/></svg>GRADE ${v.grade || gradeOf(total)}</div>
-        <p class="verdict">${v.verdict || ''}</p>
-        <div class="meta">${m === 'site' ? '网站审查' : '图片审查'} · 模型 ${v.model || 'vision'}<br>总分 = 0.45 × 指标分 + 0.55 × 视觉分（图片模式 0.6/0.4）</div>
-        <div class="actions">
-          <button id="btn-fixpack"><svg class="icon"><use href="#i-spark"/></svg>复制整改指令（给 AI 改代码）</button>
-          <button class="ghost" id="btn-fixpack-dl"><svg class="icon"><use href="#i-image"/></svg>下载 .md</button>
+  /* 站点一致性：有基线就报偏离，没有就给个建基线的入口 */
+  const site = res.site || null;
+  let siteBlock = '';
+  if (isSite && site) {
+    if (!site.baselineExists) {
+      siteBlock = `<div class="block" id="r-site">
+        <h3><svg class="i"><use href="#i-target"/></svg>站点一致性</h3>
+        <p class="prose">这个站（${esc(site.host || '')}）还没有设计系统基线。建了基线之后，后续每个页面都会自动和母版比对，只报「哪里破了」，不再每页从零审美——后台这类几十个页面的站点，这一步比逐页打分有用得多。</p>
+        <button class="btn btn-primary btn-sm" id="btn-make-baseline" style="margin-top:12px">把这次审查设为站点基线</button>
+      </div>`;
+    } else {
+      const dr = site.drift || { items: [], baseline: { counts: {} } };
+      const items = dr.items || [];
+      siteBlock = `<div class="block" id="r-site">
+        <h3><svg class="i"><use href="#i-target"/></svg>站点一致性<span class="count">${items.length ? items.length + ' 处偏离' : '无偏离'}</span></h3>
+        <div class="mfacts">
+          <span><b>基线</b>${esc(timeAgo(dr.baseline.createdAt))}建立</span>
+          <span><b>色板</b>${dr.baseline.counts.colors || 0} 个</span>
+          <span><b>字号档</b>${dr.baseline.counts.fontSizes || 0} 档</span>
+          <span class="${items.length ? 'warn' : ''}"><b>偏离分</b>${dr.driftScore || 0}/100</span>
         </div>
-        <p class="hint" id="fixpack-msg"></p>
+        ${items.length
+          ? `<ul class="drift">${items.map((i) => `<li>
+              <span class="dtype">${esc(DTYPE[i.type] || i.type)}</span>
+              <b>${esc(String(i.value))}</b>
+              ${i.count ? `<em>${i.count} 处</em>` : ''}
+              <span class="dhint">${esc(i.hint || '')}</span>
+            </li>`).join('')}</ul>`
+          : '<p class="prose">这一页没有偏离基线的色值 / 字号 / 圆角。</p>'}
+      </div>`;
+    }
+  }
+
+  const warns = [];
+  if (res.loginWall) warns.push(`<div class="banner"><svg class="i"><use href="#i-alert"/></svg><span><b>采集到的是登录页 / 鉴权页</b>这次分数不代表真实业务界面。先在「网站审查」点「登录并保存会话」完成登录，再重新审查。</span></div>`);
+  if (Number(mtr.serifCharShare) >= 0.2) warns.push(`<div class="banner"><svg class="i"><use href="#i-alert"/></svg><span><b>检测到衬线中文（占比 ${Math.round(Number(mtr.serifCharShare) * 100)}%）${(mtr.serifFonts || []).length ? '：' + esc(mtr.serifFonts.join('、')) : ''}</b>中文网页正文应改用黑体族（思源黑体 / 苹方 / 微软雅黑）。</span></div>`);
+
+  $('#view-result').innerHTML = `
+    <button class="btn btn-ghost btn-sm" id="btn-back" style="margin-bottom:12px;padding-left:0">
+      <svg class="i"><use href="#i-arrow-left"/></svg>返回${MODE_META[mode] ? MODE_META[mode].title : ''}
+    </button>
+
+    <div class="result-head">
+      <div class="ring">
+        <svg viewBox="0 0 120 120">
+          <circle class="track" cx="60" cy="60" r="52"/>
+          <circle class="val" cx="60" cy="60" r="52" stroke-dasharray="${C}" stroke-dashoffset="${C}"/>
+        </svg>
+        <div class="num">${total}<span>/100</span></div>
+      </div>
+      <div class="result-body">
+        <div class="top-line">
+          <span class="grade ${gradeClass(grade)}">GRADE ${grade}</span>
+          <span class="chip">${isSite ? '网站' : '图片'}</span>
+          <span class="result-meta">${esc(timeAgo(job.createdAt || Date.now()))}</span>
+        </div>
+        <p class="verdict">${esc(v.verdict || '已完成审查')}</p>
+        <div class="result-meta">${esc(title)}${v.model ? ' · ' + esc(v.model) : ''}</div>
+        <div class="result-actions">
+          <button class="btn btn-primary btn-sm" id="btn-fixpack"><svg class="i"><use href="#i-copy"/></svg>复制整改指令</button>
+          <button class="btn btn-secondary btn-sm" id="btn-fixpack-dl"><svg class="i"><use href="#i-download"/></svg>下载 .md</button>
+          <button class="btn btn-ghost btn-sm" id="btn-rerun"><svg class="i"><use href="#i-refresh"/></svg>再审一次</button>
+        </div>
       </div>
     </div>
 
-    <div class="bars">
-      <div class="bar-row"><span>总分</span><div class="bar-track"><i style="width:${total}%;background:var(--accent)"></i></div><b>${total}</b></div>
-      <div class="bar-row"><span>脚本指标分</span><div class="bar-track"><i style="width:${metric}%;background:#7aa2ff"></i></div><b>${metric}</b></div>
-      <div class="bar-row"><span>模型视觉分</span><div class="bar-track"><i style="width:${visual}%;background:#ff8f6b"></i></div><b>${visual}</b></div>
+    <div class="qnav">
+      <a href="#r-summary">总评</a>
+      ${strengths ? '<a href="#r-strength">亮点</a>' : ''}
+      ${refBlock ? '<a href="#r-ref">对标</a>' : ''}
+      <a href="#r-issues">问题 ${(v.issues || []).length}</a>
+      ${tokens ? '<a href="#r-tokens">token</a>' : ''}
+      ${nexts ? '<a href="#r-next">下一步</a>' : ''}
+      ${shots ? '<a href="#r-shots">采集产物</a>' : ''}
     </div>
 
-    <h2><svg class="icon"><use href="#i-info"/></svg>总评</h2>
-    <p class="summary">${v.summary || ''}</p>
+    ${warns.join('')}
 
-    ${strengths ? `<h2><svg class="icon"><use href="#i-check"/></svg>做得好的地方</h2><ul class="clean">${strengths}</ul>` : ''}
+    <div class="block" id="r-summary">
+      <h3><svg class="i"><use href="#i-info"/></svg>总评</h3>
+      <div class="bars">
+        ${sectionBar('脚本指标分', metric, 'var(--info)')}
+        ${sectionBar('模型视觉分', visual, 'var(--brand)')}
+      </div>
+      ${mfacts}
+      <p class="prose">${esc(v.summary || '')}</p>
+    </div>
+
+    ${strengths ? `<div class="block" id="r-strength"><h3><svg class="i"><use href="#i-check"/></svg>做得好的地方</h3><ul class="list">${strengths}</ul></div>` : ''}
     ${refBlock}
-    <h2><svg class="icon"><use href="#i-alert"/></svg>问题清单</h2>
-    <div class="issues">${issues || '<div class="issue"><p>模型未返回问题清单。</p></div>'}</div>
-    ${tokenRows ? `<h2><svg class="icon"><use href="#i-spark"/></svg>建议 token</h2><div class="tokens">${tokenRows}</div>` : ''}
-    ${nexts ? `<h2><svg class="icon"><use href="#i-play"/></svg>下一步</h2><ul class="clean">${nexts}</ul>` : ''}
-    ${shots ? `<h2><svg class="icon"><use href="#i-image"/></svg>采集产物</h2><div class="shots">${shots}</div>` : ''}
-  `;
-  $('#result').classList.add('on');
+    ${siteBlock}
 
-  // 整改指令包：直接粘给 Claude Code / Cursor / OpenClaw 等 AI 编程工具
-  const copyPack = async () => {
-    const r = await fetch('/api/job/' + jobId + '/fixpack');
-    if (!r.ok) { $('#fixpack-msg').textContent = '整改指令生成失败'; return; }
-    const text = await r.text();
+    <div class="block" id="r-issues">
+      <h3><svg class="i"><use href="#i-alert"/></svg>问题清单<span class="count">P0 ${counts.P0} · P1 ${counts.P1} · P2 ${counts.P2}</span></h3>
+      ${(v.issues || []).length ? `
+        <div class="filters">
+          <button class="on" data-f="ALL">全部 ${(v.issues || []).length}</button>
+          ${counts.P0 ? `<button data-f="P0">P0 ${counts.P0}</button>` : ''}
+          ${counts.P1 ? `<button data-f="P1">P1 ${counts.P1}</button>` : ''}
+          ${counts.P2 ? `<button data-f="P2">P2 ${counts.P2}</button>` : ''}
+        </div>
+        <div class="issues">${issues}</div>`
+      : '<div class="empty"><svg class="i"><use href="#i-check"/></svg><b>没有发现问题</b><span>模型未返回问题清单</span></div>'}
+    </div>
+
+    ${tokens ? `<div class="block" id="r-tokens"><h3><svg class="i"><use href="#i-spark"/></svg>建议 token</h3><div class="tokens">${tokens}</div></div>` : ''}
+    ${nexts ? `<div class="block" id="r-next"><h3><svg class="i"><use href="#i-play"/></svg>下一步</h3><ul class="list">${nexts}</ul></div>` : ''}
+    ${shots ? `<div class="block" id="r-shots"><h3><svg class="i"><use href="#i-image"/></svg>采集产物</h3><div class="shots">${shots}</div></div>` : ''}
+  `;
+
+  $('#view-form').style.display = 'none';
+  $('#view-result').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // 分数环动画
+  requestAnimationFrame(() => {
+    const c = $('#view-result .ring .val');
+    if (c) c.style.strokeDashoffset = String(offset);
+  });
+
+  $('#btn-back').addEventListener('click', () => setMode(mode));
+
+  // 问题筛选
+  $$('#r-issues .filters button').forEach((b) => b.addEventListener('click', () => {
+    $$('#r-issues .filters button').forEach((x) => x.classList.remove('on'));
+    b.classList.add('on');
+    const f = b.dataset.f;
+    $$('#r-issues .issue').forEach((el) => { el.style.display = (f === 'ALL' || el.dataset.pri === f) ? '' : 'none'; });
+  }));
+
+  // 截图放大
+  $$('#view-result .shot').forEach((f) => f.addEventListener('click', () => openShot(f.dataset.shot)));
+
+  // 问题 → 截图上定位
+  $$('#view-result .btn-locate').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openShot(b.dataset.shot, {
+      x: Number(b.dataset.x), y: Number(b.dataset.y),
+      w: Number(b.dataset.w), h: Number(b.dataset.h),
+    });
+  }));
+
+  // 建站点基线
+  const mkBase = $('#btn-make-baseline');
+  if (mkBase) mkBase.addEventListener('click', async () => {
+    mkBase.disabled = true;
     try {
-      await navigator.clipboard.writeText(text);
-      $('#fixpack-msg').textContent = '✓ 已复制（' + text.length + ' 字），可直接粘给 AI 编程工具执行';
+      const r = await fetch('/api/baseline', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ jobId: id }),
+      }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+      toast('已建立站点基线：' + r.baseline.colors.length + ' 个颜色 / ' + r.baseline.fontSizes.length + ' 档字号');
+      openJob(id);
     } catch (e) {
-      const ta = document.createElement('textarea');
-      ta.value = text; document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); ta.remove();
-      $('#fixpack-msg').textContent = '✓ 已复制（' + text.length + ' 字）';
+      toast('建基线失败：' + e.message, 'err');
+      mkBase.disabled = false;
     }
-  };
-  $('#btn-fixpack').addEventListener('click', copyPack);
+  });
+
+  // 整改指令
+  $('#btn-fixpack').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    try {
+      const text = await fetch('/api/job/' + id + '/fixpack').then((r) => r.text());
+      await navigator.clipboard.writeText(text);
+      toast('已复制 ' + text.length + ' 字，可直接粘给 AI 编程工具');
+      btn.innerHTML = '<svg class="i"><use href="#i-check"/></svg>已复制';
+      setTimeout(() => { btn.innerHTML = '<svg class="i"><use href="#i-copy"/></svg>复制整改指令'; }, 2200);
+    } catch (err) { toast('复制失败：' + err.message, 'err'); }
+  });
   $('#btn-fixpack-dl').addEventListener('click', async () => {
-    const text = await fetch('/api/job/' + jobId + '/fixpack').then(r => r.text());
+    const text = await fetch('/api/job/' + id + '/fixpack').then((r) => r.text());
     const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = '审美整改指令-' + (mtr.title || '页面').slice(0, 20) + '.md';
-    a.click(); URL.revokeObjectURL(a.href);
+    a.download = '审美整改指令-' + String(title).slice(0, 20) + '.md';
+    a.click();
+    URL.revokeObjectURL(a.href);
   });
-
-  $('#result').scrollIntoView({ behavior: 'smooth' });
+  $('#btn-rerun').addEventListener('click', () => setMode(isSite ? 'site' : 'image'));
 }
+
+/* ============================== 整站扫描 ============================== */
+let AUDIT_TIMER = null;
+let DISCOVERED = [];
+
+const ROLES = [
+  ['home', '首页'], ['dashboard', '工作台'], ['list', '列表'], ['detail', '详情'],
+  ['form', '表单/流程'], ['single', '单页'], ['settings', '设置'], ['other', '其他'],
+];
+const ROLE_LABEL = { flow: '表单/流程', ...Object.fromEntries(ROLES) };
+const BACKEND_ROLES = ['dashboard', 'form', 'settings'];
+
+function shortUrl(u) {
+  try { const x = new URL(u); return (x.pathname === '/' ? '/' : x.pathname) + (x.search || '') + (x.hash || ''); }
+  catch { return u; }
+}
+function scoreClass(v) { return v == null ? '' : v >= 90 ? 'good' : v >= 70 ? 'ok' : v >= 50 ? 'warn' : 'bad'; }
+
+/* ---- 页面清单编辑：一行一个 URL + 一个类型标签 ---- */
+function addTargetRow(url, role) {
+  const li = document.createElement('div');
+  li.className = 'target-row';
+  li.innerHTML = `
+    <select class="input t-role" aria-label="页面类型">
+      ${ROLES.map(([v, t]) => `<option value="${v}"${v === (role || 'other') ? ' selected' : ''}>${t}</option>`).join('')}
+    </select>
+    <input class="input t-url" type="text" placeholder="https://example.com/cases" spellcheck="false" autocomplete="off">
+    <button class="btn btn-ghost btn-sm btn-icon t-del" title="移除"><svg class="i"><use href="#i-trash"/></svg></button>`;
+  li.querySelector('.t-url').value = url || '';
+  li.querySelector('.t-del').addEventListener('click', () => { li.remove(); syncTargets(); });
+  li.querySelector('.t-url').addEventListener('input', syncTargets);
+  $('#target-list').appendChild(li);
+  syncTargets();
+  return li;
+}
+
+function collectTargets() {
+  return $$('#target-list .target-row').map((row) => ({
+    url: row.querySelector('.t-url').value.trim(),
+    role: row.querySelector('.t-role').value,
+  })).filter((t) => t.url);
+}
+
+function syncTargets() {
+  const list = collectTargets();
+  $('#target-count').textContent = `${list.length} 页` + (list.length ? ` · ${list.map((t) => ROLE_LABEL[t.role]).join(' / ')}` : '');
+  LS.set('tl-audit-targets', JSON.stringify($$('#target-list .target-row').map((row) => ({
+    url: row.querySelector('.t-url').value, role: row.querySelector('.t-role').value,
+  }))));
+  renderDiscoverBox();
+}
+
+/* ---- 登录态：后台系统必填，公开官网留空 ---- */
+let AUTH_INFO = { has: false, kinds: [], hasBrowserState: false };
+
+function authTargetUrl() {
+  return normalizeUrl($('#audit-url').value) || (collectTargets()[0] || {}).url || '';
+}
+
+function paintAuthChip() {
+  const chip = $('#auth-chip');
+  if (!AUTH_INFO.has) {
+    chip.textContent = AUTH_INFO.hasBrowserState
+      ? '未配置 · 已有浏览器登录态可提取'
+      : '未配置 · 公开官网可留空';
+    chip.className = 'auth-chip';
+  } else {
+    const kinds = (AUTH_INFO.kinds || []).map((k) => (k === 'Cookie' ? 'Cookie' : 'Authorization')).join(' + ');
+    chip.textContent = `已配置 ${kinds}`;
+    chip.className = 'auth-chip on';
+  }
+}
+
+async function refreshAuth() {
+  const u = authTargetUrl();
+  if (!u) { AUTH_INFO = { has: false, kinds: [], hasBrowserState: false }; paintAuthChip(); return; }
+  try {
+    AUTH_INFO = await fetch('/api/audit/auth?url=' + encodeURIComponent(u)).then((r) => r.json());
+    if (AUTH_INFO.error) AUTH_INFO = { has: false, kinds: [], hasBrowserState: false };
+  } catch { /* ignore */ }
+  paintAuthChip();
+}
+
+async function saveAuth() {
+  const u = authTargetUrl();
+  if (!u) return toast('先填站点地址', 'err');
+  const cookie = $('#auth-cookie').value.trim();
+  const authorization = $('#auth-authz').value.trim();
+  if (!cookie && !authorization) return toast('两样都空着，要清除请点「清除」', 'err');
+  const r = await fetch('/api/audit/auth', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ url: u, cookie, authorization }),
+  }).then((x) => x.json());
+  if (r.error) return toast(r.error, 'err');
+  toast('登录态已保存，下次扫描会带上');
+  await refreshAuth();
+}
+
+async function clearAuth() {
+  const u = authTargetUrl();
+  if (!u) return;
+  await fetch('/api/audit/auth?url=' + encodeURIComponent(u), { method: 'DELETE' });
+  $('#auth-cookie').value = '';
+  $('#auth-authz').value = '';
+  toast('登录态已清除');
+  await refreshAuth();
+}
+
+async function deriveAuth() {
+  const u = authTargetUrl();
+  if (!u) return toast('先填站点地址', 'err');
+  const r = await fetch('/api/audit/auth', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ url: u, fromState: true }),
+  }).then((x) => x.json());
+  if (r.error) return toast(r.error, 'err');
+  toast('已从浏览器登录态提取：' + (r.kinds || []).join(' + '));
+  await refreshAuth();
+}
+
+async function browserLogin() {
+  const u = authTargetUrl();
+  if (!u) return toast('先填站点地址', 'err');
+  const r = await fetch('/api/auth/login', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ url: u }),
+  }).then((x) => x.json());
+  if (r.error) return toast(r.error, 'err');
+  toast('已打开浏览器窗口，登录完成后回来点「从登录态提取」');
+}
+
+$('#btn-auth-toggle').addEventListener('click', () => {
+  const p = $('#auth-panel');
+  p.hidden = !p.hidden;
+  $('#btn-auth-toggle').textContent = p.hidden ? '配置' : '收起';
+});
+$('#btn-auth-save').addEventListener('click', saveAuth);
+$('#btn-auth-clear').addEventListener('click', clearAuth);
+$('#btn-auth-derive').addEventListener('click', deriveAuth);
+$('#btn-auth-login').addEventListener('click', browserLogin);
+
+/* ---- 候选建议：爬虫只提建议，人来决定加不加 ---- */
+function renderDiscoverBox() {
+  const box = $('#discover-box');
+  if (!DISCOVERED.length) { box.hidden = true; box.innerHTML = ''; return; }
+  const added = new Set(collectTargets().map((t) => t.url));
+  const chips = DISCOVERED.map((c, i) => {
+    const on = added.has(c.url);
+    return `<button class="dchip${on ? ' on' : ''}" data-ch="${i}" ${on ? 'disabled' : ''} title="${esc(c.url)}">
+      <span class="dchip-role">${esc(c.label || ROLE_LABEL[c.role] || '其他')}</span>
+      <span class="dchip-url">${esc(shortUrl(c.url))}</span>
+    </button>`;
+  }).join('');
+  box.hidden = false;
+  box.innerHTML = `<div class="discover-head">
+      <b>候选页面 ${DISCOVERED.length} 个</b><span class="hint">点一下加进清单，类型可以再改</span>
+    </div>
+    <div class="dchips">${chips}</div>`;
+  $$('.dchip', box).forEach((b) => b.addEventListener('click', () => {
+    const c = DISCOVERED[Number(b.dataset.ch)];
+    addTargetRow(c.url, c.role);
+  }));
+}
+
+async function discover() {
+  const url = normalizeUrl($('#audit-url').value);
+  if (!url) return toast('先填站点地址', 'err');
+  const btn = $('#btn-discover');
+  btn.disabled = true;
+  const old = btn.querySelector('span').textContent;
+  btn.querySelector('span').textContent = '发现中…';
+  try {
+    const r = await fetch('/api/audit/discover', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url, maxPages: 24 }),
+    }).then((x) => x.json());
+    if (r.error) throw new Error(r.error);
+    DISCOVERED = (r.candidates || []).filter((c) => c.role !== 'other' || true);
+    if (!DISCOVERED.length) return toast('没发现可用页面', 'err');
+    /* 首页永远第一条 */
+    await ensureHomeTarget(url);
+    renderDiscoverBox();
+    toast(`发现 ${DISCOVERED.length} 个候选，勾选要测的页面`);
+  } catch (e) {
+    toast('发现失败：' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.querySelector('span').textContent = old;
+  }
+}
+
+/* 清单里没有首页就先补一行，避免只测列表不测首页 */
+async function ensureHomeTarget(url) {
+  const list = collectTargets();
+  if (list.some((t) => t.role === 'home')) return;
+  let home = url;
+  try { const u = new URL(url); home = u.origin + '/'; } catch { /* ignore */ }
+  if (list.some((t) => t.url === home)) return;
+  const first = $$('#target-list .target-row')[0];
+  const row = first || addTargetRow('', 'home');
+  row.querySelector('.t-url').value = home;
+  row.querySelector('.t-role').value = 'home';
+  syncTargets();
+}
+
+async function submitAudit() {
+  const homeUrl = normalizeUrl($('#audit-url').value);
+  let targets = collectTargets();
+  if (!targets.length && homeUrl) {
+    await ensureHomeTarget(homeUrl);
+    targets = collectTargets();
+  }
+  if (!targets.length) return toast('至少填一个页面地址', 'err');
+  const btn = $('#btn-audit');
+  btn.disabled = true;
+  $('#progress-audit').hidden = false;
+  $('#audit-result').innerHTML = '';
+  $('#audit-progress-text').textContent = '启动中…';
+  $('#audit-progress-count').textContent = '0/' + targets.length;
+  $('#audit-bar').style.width = '4%';
+  try {
+    const r = await fetch('/api/audit/site', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url: homeUrl, urls: targets }),
+    }).then((x) => x.json());
+    if (r.error) throw new Error(r.error);
+    if (homeUrl) LS.set('tl-audit-url', homeUrl);
+    pollAudit(r.id);
+  } catch (e) {
+    toast('启动失败：' + e.message, 'err');
+    btn.disabled = false;
+    $('#progress-audit').hidden = true;
+  }
+}
+
+function pollAudit(id) {
+  clearInterval(AUDIT_TIMER);
+  const tick = async () => {
+    let j;
+    try { j = await fetch('/api/job/' + id).then((r) => r.json()); } catch { return; }
+    if (!j || j.error) return;
+    const p = j.progress || {};
+    if (p.total) {
+      $('#audit-progress-count').textContent = (p.done || 0) + '/' + p.total;
+      $('#audit-progress-text').textContent = p.phase === 'crawl' ? '正在发现同源页面…' : ('扫描中 ' + (p.text || ''));
+      $('#audit-bar').style.width = Math.max(4, Math.round(((p.done || 0) / p.total) * 100)) + '%';
+    }
+    if (j.status === 'done') {
+      clearInterval(AUDIT_TIMER);
+      $('#progress-audit').hidden = true;
+      $('#btn-audit').disabled = false;
+      renderAudit(j);
+      loadHistory(true);
+    } else if (j.status === 'error') {
+      clearInterval(AUDIT_TIMER);
+      $('#progress-audit').hidden = true;
+      $('#btn-audit').disabled = false;
+      toast(j.error || '扫描失败', 'err');
+    }
+  };
+  tick();
+  AUDIT_TIMER = setInterval(tick, 2500);
+}
+
+function renderAudit(job) {
+  const r = job.result || {};
+  const pages = r.pages || [];
+  const s = r.summary || {};
+  const blocked = r.blocked || [];
+  const cell = (v) => `<td class="num ${scoreClass(v)}">${v == null ? '—' : v}</td>`;
+  const rows = pages.map((p) => {
+    const sc = p.scores || {};
+    const m = p.metrics || {};
+    const roleTag = `<td class="prole"><span class="role-tag r-${esc(p.role || 'other')}">${esc(ROLE_LABEL[p.role] || '其他')}</span></td>`;
+    if (p.blocked) {
+      const label = p.blocked === 'login' ? '被登录墙挡住' : p.blocked === 'load' ? '页面没加载起来' : '没测出结果';
+      return `<tr class="row-blocked">
+        ${roleTag}
+        <td class="purl">${esc(shortUrl(p.url))}<div class="perr">${esc(p.error || '')}</div></td>
+        <td class="blocked-cell" colspan="9"><span class="blocked-tag">${label}</span> 这一页没有真实分数，不计入平均</td>
+      </tr>`;
+    }
+    const fails = (p.fails || []).map((f) => `<li><b title="${esc(f.titleEn || '')}">${esc(f.title || f.id)}</b>${f.value ? ` <em>${esc(f.value)}</em>` : ''}</li>`).join('');
+    return `<tr>
+      ${roleTag}
+      <td class="purl">
+        <a href="${esc(p.finalUrl || p.url)}" target="_blank" rel="noreferrer">${esc(shortUrl(p.url))}</a>
+      </td>
+      ${cell(sc.performance)}${cell(sc.accessibility)}${cell(sc.seo)}${cell(sc.bestPractices)}
+      <td class="num">${esc(m.lcp || '—')}</td>
+      <td class="num">${esc(m.cls || '—')}</td>
+      <td class="num">${esc(m.ttfb || '—')}</td>
+      <td class="num">${esc(m.weight || '—')}</td>
+      <td class="lhf">${`<details><summary>${p.failCount || 0} 项</summary><ul class="lh-fails">${fails || '<li>没有红项</li>'}</ul></details>`}</td>
+    </tr>`;
+  }).join('');
+
+  /* 被登录墙挡住：这是最危险的一种失败——旧版本会把登录页的分数当后台页的分数报上来 */
+  const blockedBanner = blocked.length ? `<div class="card block-banner">
+      <div class="block-head">
+        <svg class="i"><use href="#i-alert"/></svg>
+        <b>${blocked.length} / ${pages.length} 页被登录墙挡住，结果无效</b>
+      </div>
+      <ul class="block-list">
+        ${blocked.map((b) => `<li><span class="role-tag r-other">${esc(ROLE_LABEL[b.role] || '其他')}</span>
+          <code>${esc(shortUrl(b.url))}</code><span>${esc(b.reason || '')}</span></li>`).join('')}
+      </ul>
+      <p class="hint" style="margin:10px 0 0">
+        这些页跑的是登录页，分数跟你要看的内容无关，所以没有算进平均。
+        在「登录态」里配一次 Cookie 或 Authorization 再扫。
+      </p>
+      <button class="btn btn-primary btn-sm" id="btn-block-fix" style="margin-top:10px">去配置登录态</button>
+    </div>` : '';
+
+  const cards = [
+    ['性能', s.performance], ['可访问性', s.accessibility],
+    [r.isBackend ? 'SEO（后台不适用）' : 'SEO', r.isBackend ? null : s.seo],
+    ['最佳实践', s.bestPractices],
+  ].map(([label, v]) => `<div class="lh-card">
+      <div class="lh-score ${scoreClass(v)}">${v == null ? '—' : v}</div>
+      <div class="lh-label">${label}</div>
+    </div>`).join('');
+
+  /* 按模板看：同一张分数在很多站点是假的，模板之间的差距才是真问题 */
+  const byRole = r.byRole || [];
+  const roleRows = byRole.map((g) => `<tr>
+      <td class="prole"><span class="role-tag r-${esc(g.role)}">${esc(g.label)}</span></td>
+      <td class="num">${g.count} 页</td>
+      ${cell(g.performance)}${cell(g.accessibility)}${cell(g.seo)}${cell(g.bestPractices)}
+    </tr>`).join('');
+  const roleGap = byRole.length >= 2
+    ? (() => {
+      const perf = byRole.map((g) => g.performance).filter((v) => v != null);
+      if (perf.length < 2) return '';
+      const hi = byRole.reduce((a, b) => ((b.performance || 0) > (a.performance || 0) ? b : a));
+      const lo = byRole.reduce((a, b) => ((b.performance || 0) < (a.performance || 0) ? b : a));
+      return `性能最好的是「${esc(hi.label)}」${hi.performance}，最差的是「${esc(lo.label)}」${lo.performance}，差 ${Math.abs((hi.performance || 0) - (lo.performance || 0))} 分——先修差的那个模板，收益最大。`;
+    })()
+    : '';
+
+  const worst = (r.worst || []).filter((w) => w.performance != null);
+  const worstLine = worst.length
+    ? `最差的页面：${worst.map((w) => `${esc(w.role ? '[' + (ROLE_LABEL[w.role] || '') + '] ' : '')}${esc(shortUrl(w.url))} <b>${w.performance}</b>`).join(' · ')}`
+    : '';
+
+  const okCount = r.okCount != null ? r.okCount : pages.filter((p) => !p.blocked && !p.error).length;
+  const headSub = r.allBlocked
+    ? `${pages.length} 个页面 · 全部没测到`
+    : `${okCount} 页有效${blocked.length ? ` · ${blocked.length} 页无效` : ''} · 平均分${r.source === 'crawl' ? ' · 自动发现' : ' · 人工指定'}${r.authUsed ? ' · 带登录态' : ''}`;
+
+  $('#audit-result').innerHTML = `
+    ${blockedBanner}
+    ${r.allBlocked ? '' : `<div class="card card-pad" style="margin-top:16px">
+      <div class="section-head" style="margin:0 0 14px">
+        <h2>${esc(domainOf(r.scanUrl || ''))}</h2>
+        <span class="sub">${headSub}</span>
+      </div>
+      <div class="lh-cards">${cards}</div>
+      ${worstLine ? `<p class="hint" style="margin-top:12px">${worstLine}</p>` : ''}
+      <p class="hint" style="margin-top:6px">Lighthouse 默认按移动端 4G 模拟，同页两次跑分能差 ±8 分；看趋势别看单次绝对值。视觉审美另看「网站审查」。</p>
+    </div>`}
+    ${!r.allBlocked && byRole.length ? `<div class="card" style="margin-top:16px;overflow:auto">
+      <table class="lh-table">
+        <thead><tr>
+          <th>页面类型</th><th class="num-h">页数</th><th class="num-h">性能</th><th class="num-h">可访问</th><th class="num-h">SEO</th><th class="num-h">最佳实践</th>
+        </tr></thead>
+        <tbody>${roleRows}</tbody>
+      </table>
+      ${roleGap ? `<p class="hint" style="padding:0 14px 14px">${roleGap}</p>` : ''}
+    </div>` : ''}
+    ${!r.allBlocked ? `<div class="card" style="margin-top:16px;overflow:auto">
+      <table class="lh-table">
+        <thead><tr>
+          <th>类型</th><th>页面</th><th class="num-h">性能</th><th class="num-h">可访问</th><th class="num-h">SEO</th><th class="num-h">最佳实践</th><th class="num-h">LCP</th><th class="num-h">CLS</th><th class="num-h">TTFB</th><th class="num-h">体积</th><th>红项</th>
+        </tr></thead>
+        <tbody>${rows || '<tr><td colspan="11">没有结果</td></tr>'}</tbody>
+      </table>
+    </div>` : ''}`;
+
+  const fixBtn = $('#btn-block-fix');
+  if (fixBtn) fixBtn.addEventListener('click', () => {
+    $('#auth-panel').hidden = false;
+    $('#btn-auth-toggle').textContent = '收起';
+    $('#auth-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+}
+
+$('#btn-audit').addEventListener('click', submitAudit);
+$('#btn-discover').addEventListener('click', discover);
+$('#btn-add-target').addEventListener('click', () => addTargetRow('', 'other'));
+$('#audit-url').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); if (!collectTargets().length) discover(); else submitAudit(); }
+});
+$('#audit-url').addEventListener('change', () => {
+  ensureHomeTarget(normalizeUrl($('#audit-url').value));
+  refreshAuth();
+});
+(function bootAudit() {
+  const last = LS.get('tl-audit-url', '');
+  if (last) $('#audit-url').value = last;
+  let saved = [];
+  try { saved = JSON.parse(LS.get('tl-audit-targets', '[]')) || []; } catch { /* ignore */ }
+  const rows = (saved || []).filter((t) => t && t.url);
+  if (rows.length) rows.forEach((t) => addTargetRow(t.url, t.role));
+  else if (last) addTargetRow(last.replace(/\/?$/, '/'), 'home');
+  else addTargetRow('', 'home');
+  refreshAuth();
+})();
+
+/* ============================== 历史记录 ============================== */
+async function loadHistory(silent) {
+  try {
+    const d = await fetch('/api/history').then((r) => r.json());
+    HIST = d.items || [];
+    $('#nav-count').textContent = String(d.total ?? HIST.length);
+    renderRecent();
+    if (mode === 'history' || !silent) renderHistory();
+  } catch (e) { if (!silent) toast('历史记录加载失败', 'err'); }
+}
+
+function histRow(it) {
+  const ok = it.status === 'done';
+  const isAudit = it.mode === 'audit';
+  const scoreTxt = ok && Number.isFinite(it.score) ? Math.round(it.score) : '—';
+  const grade = ok ? String(it.grade || gradeOf(it.score || 0)).toUpperCase()[0] : '';
+  const label = isAudit ? '整站' : it.mode === 'image' ? '图片' : '网站';
+  const t = it.title || (it.url ? domainOf(it.url) : '') || (it.mode === 'image' ? '图片审查' : '网站审查');
+  return `<div class="hist-item" data-open="${esc(it.id)}">
+    <div class="hist-thumb" ${it.thumb ? `style="background-image:url('/runs/${esc(it.id)}/${esc(it.thumb)}')"` : ''}>
+      ${it.thumb ? '' : '<svg class="i"><use href="#i-image"/></svg>'}
+    </div>
+    <div class="hist-main">
+      <div class="hist-title">${esc(t)}</div>
+      <div class="hist-meta">
+        <span class="chip" style="height:20px;font-size:10.5px">${label}</span>
+        ${ok ? (isAudit
+          ? `<span class="chip" style="height:20px;font-size:10.5px">性能均分</span>`
+          : `<span class="grade ${gradeClass(grade)}" style="height:20px;font-size:10.5px">${esc(grade)}</span>`)
+             : `<span class="chip chip-danger" style="height:20px;font-size:10.5px">失败</span>`}
+        <span>${esc(timeAgo(it.createdAt))}</span>
+        ${it.url ? `<span>${esc(domainOf(it.url))}</span>` : ''}
+      </div>
+    </div>
+    <div class="hist-score" style="color:${ok ? 'var(--ink)' : 'var(--ink-3)'}">${scoreTxt}</div>
+    <div class="hist-actions">
+      <button class="btn btn-ghost btn-sm btn-icon" data-del="${esc(it.id)}" title="删除记录"><svg class="i"><use href="#i-trash"/></svg></button>
+    </div>
+  </div>`;
+}
+
+function bindHistRows(root) {
+  $$('[data-open]', root).forEach((el) => el.addEventListener('click', (e) => {
+    if (e.target.closest('[data-del]')) return;
+    openJob(el.dataset.open);
+  }));
+  $$('[data-del]', root).forEach((b) => b.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (!confirm('删除这条审查记录？目录 runs/' + b.dataset.del + ' 会被移除。')) return;
+    await fetch('/api/job/' + b.dataset.del, { method: 'DELETE' });
+    toast('已删除');
+    loadHistory();
+  }));
+}
+
+function renderRecent() {
+  const card = $('#recent-card');
+  const list = $('#recent-list');
+  // 优先展示成功记录，失败记录只在成功数不足时补位
+  const ok = HIST.filter((x) => x.status === 'done');
+  const recent = (ok.length >= 3 ? ok : HIST).slice(0, 3);
+  card.hidden = recent.length === 0;
+  list.innerHTML = recent.map(histRow).join('');
+  bindHistRows(list);
+}
+$('#recent-all').addEventListener('click', () => setMode('history'));
+
+let histFilter = 'all';
+function renderHistory() {
+  const list = $('#hist-list');
+  const doneCount = HIST.filter((x) => x.status === 'done').length;
+  const errCount = HIST.length - doneCount;
+  $('#hist-sub').textContent = `${HIST.length} 条 · 成功 ${doneCount} · 失败 ${errCount}`;
+  $$('#hist-filters button').forEach((b) => b.classList.toggle('on', b.dataset.hf === histFilter));
+  if (!HIST.length) {
+    list.innerHTML = '<div class="empty"><svg class="i"><use href="#i-history"/></svg><b>还没有审查记录</b><span>跑一次网站或图片审查后，结果会出现在这里</span></div>';
+    return;
+  }
+  const rows = HIST.filter((x) => histFilter === 'all' || x.status === histFilter);
+  list.innerHTML = rows.length
+    ? rows.map(histRow).join('')
+    : '<div class="empty"><b>没有符合条件的记录</b><span>换个筛选条件看看</span></div>';
+  bindHistRows(list);
+}
+$$('#hist-filters button').forEach((b) => b.addEventListener('click', () => {
+  histFilter = b.dataset.hf;
+  renderHistory();
+}));
+
+async function openJob(id) {
+  const j = await fetch('/api/job/' + id).then((r) => r.json()).catch(() => null);
+  if (!j) return toast('记录不存在', 'err');
+  if (j.status !== 'done') return toast(j.error || '该记录没有结果', 'err');
+  if (j.mode === 'audit') {
+    setMode('audit');
+    const u = (j.result && j.result.scanUrl) || (j.input || {}).url || '';
+    if (u) $('#audit-url').value = u;
+    /* 清单要跟着还原，否则上面是空行、下面是结果，对不上 */
+    const saved = ((j.input || {}).urls) || [];
+    const fromResult = ((j.result || {}).pages || []).map((p) => ({ url: p.url, role: p.role }));
+    const src = saved.length ? saved : fromResult;
+    if (src.length) {
+      $('#target-list').innerHTML = '';
+      src.forEach((t) => addTargetRow(t.url, t.role));
+    }
+    renderAudit(j);
+    refreshAuth();
+    return;
+  }
+  showResult(j, j.mode, id);
+}
+
+$('#hist-refresh').addEventListener('click', () => { loadHistory(); toast('已刷新'); });
+
+/* ============================== 启动 ============================== */
+(function boot() {
+  const last = LS.get('tl-last-url', '');
+  if (last) $('#site-url').value = last;
+  loadHistory(true);
+  loadModels();
+  if (last) checkAuth();
+})();
 </script>
 </body>
 </html>

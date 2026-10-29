@@ -1,0 +1,10 @@
+{
+  "name": "taste-lab",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "本地审美审查台：采集引擎 + 视觉模型评审 + 站点基线 + 整站 Lighthouse 扫描",
+  "dependencies": {
+    "lighthouse": "^12.6.1"
+  }
+}

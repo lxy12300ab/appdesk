@@ -201,7 +201,7 @@ function setJob(id, patch) {
 
 // 进程重启后，磁盘上残留的 running 状态没有进程接管，会永远挂着。
 // 超过这个时长仍为 running 的，判定为「中断」，直接收敛成 error。
-const STALE_JOB_MS = 15 * 60 * 1000;
+const STALE_JOB_MS = 2 * 60 * 1000;
 
 function loadJob(id) {
   const job = jobs.get(id);

@@ -5,6 +5,8 @@ apps/workbench/data/backups/
 apps/workbench/data/history.jsonl
 apps/workbench/data/health.json
 apps/workbench/data/health.jsonl
+# 能力清单是扫描本机生成的运行时数据（含本机路径/命令），不入库
+apps/workbench/data/capabilities.json
 # 改文件前留的手工备份，不入库
 *.bak-*
 # 运行时产物

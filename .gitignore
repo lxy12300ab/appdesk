@@ -2,6 +2,8 @@
 apps/workbench/data/apps.json
 # 运行时产物
 apps/*/runs/
+# 本地配置（含 API Key 与登录态），不入库
+apps/taste-lab/data/
 *.log
 .DS_Store
 node_modules/

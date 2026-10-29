@@ -41,6 +41,7 @@
   <div class="tabs">
     <button class="tab on" data-mode="site"><svg class="icon"><use href="#i-globe"/></svg>网站审查</button>
     <button class="tab" data-mode="image"><svg class="icon"><use href="#i-image"/></svg>图片审查</button>
+    <button class="tab" data-mode="settings"><svg class="icon"><use href="#i-spark"/></svg>模型配置</button>
   </div>
 
   <div class="panel">
@@ -48,14 +49,16 @@
       <div class="row">
         <input type="text" id="site-url" placeholder="https://your-site.com" value="">
         <select id="site-industry">
-          <option value="">行业（对标基准）</option>
-          <option>Software/Cloud</option><option>Internet</option><option>Pharma</option>
-          <option>Finance</option><option>Retail</option><option>Luxury</option>
-          <option>Industrial</option><option>Consumer Goods</option><option>Hardware/Devices</option>
+          <option value="">加载行业…</option>
         </select>
         <button id="btn-site"><svg class="icon"><use href="#i-play"/></svg>开始审查</button>
       </div>
-      <p class="hint">采集 1440×900 首屏 + 整页截图 + 移动端 390×844，量出颜色/字体/层级/对比度，再由模型看图评分。本地地址如 <code>http://localhost:3000</code> 同样可用。</p>
+      <p class="hint">采集 1440×900 首屏 + 整页截图 + 移动端 390×844，量出颜色/字体/层级/对比度，再由模型看图评分。本地地址如 <code>http://localhost:3000</code> 同样可用。<br>后台类应用（管理后台 / 内部控制台）需要登录时：先点「登录并保存会话」，在弹出的浏览器里登录一次，之后审查会自动带上登录态。</p>
+      <div class="row row-tight">
+        <button class="ghost" id="btn-login"><svg class="icon"><use href="#i-globe"/></svg>登录并保存会话</button>
+        <span class="auth-state" id="auth-state">未检查登录态</span>
+      </div>
+      <p class="hint" id="login-hint" style="display:none"></p>
     </div>
 
     <div id="pane-image" style="display:none">
@@ -63,14 +66,38 @@
         <input type="file" id="img-file" accept="image/png,image/jpeg,image/webp">
         <select id="img-type">
           <option value="">自动判断类型</option>
-          <option value="photo">photo</option><option value="product">product</option>
-          <option value="poster">poster</option><option value="social">social</option>
-          <option value="ui">ui</option><option value="illustration">illustration</option>
-          <option value="figure">figure</option><option value="ai">ai</option>
+          <option value="photo">照片</option><option value="product">产品图</option>
+          <option value="poster">海报</option><option value="social">社交图</option>
+          <option value="ui">界面截图</option><option value="illustration">插画</option>
+          <option value="figure">图表</option><option value="ai">AI 生成图</option>
         </select>
         <button id="btn-img"><svg class="icon"><use href="#i-play"/></svg>开始审查</button>
       </div>
       <p class="hint">输出调色板、构图辅助线、8 维度评分与 AI 伪影检查清单。</p>
+    </div>
+
+    <div id="pane-settings" style="display:none">
+      <div class="row">
+        <select id="cfg-model" style="flex:1 1 420px"></select>
+        <button id="btn-test-model" class="ghost"><svg class="icon"><use href="#i-play"/></svg>测试连通</button>
+        <button id="btn-save-model"><svg class="icon"><use href="#i-check"/></svg>保存为默认</button>
+      </div>
+      <p class="hint" id="model-hint">模型列表来自 <code>~/.openclaw/openclaw.json</code> 的 providers。MiniMax 等同时支持 OpenAI 兼容与 Anthropic 两种协议，调用失败会自动换协议重试。</p>
+      <div class="settings-list" id="model-list"></div>
+
+      <h2 style="margin-top:30px"><svg class="icon"><use href="#i-spark"/></svg>添加自定义模型</h2>
+      <div class="row">
+        <input type="text" id="cm-name" placeholder="显示名称（如 我的视觉模型）">
+        <input type="text" id="cm-model" placeholder="模型 ID（如 MiniMax-M3.1-Flash-Preview）" style="flex:1 1 240px">
+        <input type="text" id="cm-base" placeholder="Base URL（如 https://api.minimaxi.com/v1）" style="flex:1 1 240px">
+        <input type="text" id="cm-key" placeholder="API Key" style="flex:1 1 180px">
+        <select id="cm-api">
+          <option value="openai-completions">OpenAI 兼容</option>
+          <option value="anthropic-messages">Anthropic 协议</option>
+        </select>
+        <button id="btn-add-model" class="ghost"><svg class="icon"><use href="#i-check"/></svg>添加</button>
+      </div>
+      <p class="hint">自定义模型保存在应用目录 <code>data/config.json</code>，密钥只存本机。</p>
     </div>
 
     <div class="status" id="status">
@@ -82,12 +109,13 @@
 
   <div class="result" id="result"></div>
 
-  <footer>Taste Lab · 本地运行 · 视觉模型 deepseek/deepseek-flash · 数据不出本机</footer>
+  <footer>Taste Lab · 本地运行 · <span id="footer-model">模型加载中…</span> · 数据不出本机</footer>
 </div>
 
 <script>
 const $ = (s) => document.querySelector(s);
 let mode = 'site';
+let currentModelId = '';
 
 /* 主题切换 */
 function applyTheme(t) {
@@ -107,14 +135,134 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   mode = t.dataset.mode;
   $('#pane-site').style.display = mode === 'site' ? '' : 'none';
   $('#pane-image').style.display = mode === 'image' ? '' : 'none';
+  $('#pane-settings').style.display = mode === 'settings' ? '' : 'none';
   $('#result').classList.remove('on');
   $('#error').innerHTML = '';
+  if (mode === 'settings') loadModels();
 }));
+
+/* ---------------- 行业列表（中文显示，值为英文 key） ---------------- */
+async function loadIndustries() {
+  try {
+    const r = await fetch('/api/industries').then(r => r.json());
+    const sel = $('#site-industry');
+    sel.innerHTML = r.industries.map(i =>
+      `<option value="${i.en}">${i.zh}${i.en ? '' : ''}</option>`).join('');
+  } catch (e) { /* ignore */ }
+}
+loadIndustries();
+
+/* ---------------- 模型列表 & 配置 ---------------- */
+let MODELS = [];
+async function loadModels() {
+  const d = await fetch('/api/models').then(r => r.json()).catch(() => null);
+  if (!d) return;
+  MODELS = d.models || [];
+  const sel = $('#cfg-model');
+  const cur = d.current;
+  sel.innerHTML = MODELS.map(m => {
+    const tag = m.image ? '支持图片' : '仅文字';
+    const api = m.api === 'anthropic-messages' ? 'Anthropic' : 'OpenAI兼容';
+    return `<option value="${m.id}"${m.id === cur ? ' selected' : ''}>${m.name} — ${tag} · ${api}</option>`;
+  }).join('');
+  $('#model-list').innerHTML = MODELS.map(m => `
+    <div class="model-row">
+      <div><b>${m.name}</b><span class="mono">${m.id}</span></div>
+      <div class="model-meta">
+        <span class="pill ${m.image ? 'pill-ok' : 'pill-warn'}">${m.image ? '支持图片' : '仅文字'}</span>
+        <span class="pill">${m.api === 'anthropic-messages' ? 'Anthropic 协议' : 'OpenAI 兼容'}</span>
+        <span class="pill">${m.baseUrl}</span>
+        ${m.custom ? `<button class="ghost mini" data-del-model="${m.id}">删除</button>` : ''}
+      </div>
+    </div>`).join('');
+  currentModelId = cur;
+  $('#footer-model').textContent = '视觉模型 ' + cur;
+  document.querySelectorAll('[data-del-model]').forEach(b => b.addEventListener('click', async () => {
+    await fetch('/api/config/custom-model/' + encodeURIComponent(b.dataset.delModel), { method: 'DELETE' });
+    loadModels();
+  }));
+}
+loadModels();
+
+$('#btn-save-model').addEventListener('click', async () => {
+  const model = $('#cfg-model').value;
+  await fetch('/api/config', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ model }),
+  });
+  $('#footer-model').textContent = '视觉模型 ' + model;
+  fail2('已保存默认模型：' + model);
+});
+
+$('#btn-test-model').addEventListener('click', async () => {
+  const model = $('#cfg-model').value;
+  fail2('正在测试 ' + model + ' …');
+  const r = await fetch('/api/config/test-model', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ model }),
+  }).then(r => r.json()).catch(e => ({ ok: false, error: String(e) }));
+  fail2(r.ok ? '✓ 连通正常：' + (r.reply || '').slice(0, 60) : '✗ 连通失败：' + (r.error || '未知错误'), true);
+});
+
+$('#btn-add-model').addEventListener('click', async () => {
+  const body = {
+    name: $('#cm-name').value.trim(),
+    model: $('#cm-model').value.trim(),
+    baseUrl: $('#cm-base').value.trim(),
+    apiKey: $('#cm-key').value.trim(),
+    api: $('#cm-api').value,
+  };
+  if (!body.model || !body.baseUrl) return fail2('需要填写模型 ID 和 Base URL');
+  const r = await fetch('/api/config/custom-model', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+  }).then(r => r.json());
+  fail2(r.ok ? '✓ 已添加：' + r.model.id : '✗ ' + (r.error || '添加失败'), true);
+  if (r.ok) { $('#cm-name').value = ''; $('#cm-key').value = ''; loadModels(); }
+});
+
+/* ---------------- 登录态（后台类应用） ---------------- */
+$('#site-url').addEventListener('change', checkAuth);
+$('#site-url').addEventListener('blur', checkAuth);
+
+async function checkAuth() {
+  const url = $('#site-url').value.trim();
+  if (!url) return;
+  const el = $('#auth-state');
+  el.textContent = '检查登录态…';
+  try {
+    const d = await fetch('/api/auth-state?url=' + encodeURIComponent(url)).then(r => r.json());
+    el.textContent = d.hasAuth ? '已保存登录态，审查会自动带上' : '无登录态（若为后台应用需先登录）';
+    el.className = 'auth-state ' + (d.hasAuth ? 'ok' : 'warn');
+  } catch (e) {
+    el.textContent = '登录态检查失败';
+  }
+}
+
+$('#btn-login').addEventListener('click', async () => {
+  const url = $('#site-url').value.trim();
+  if (!url) return fail2('请先填写要登录的网址');
+  const hint = $('#login-hint');
+  hint.style.display = '';
+  hint.innerHTML = '正在打开浏览器窗口，请在弹出的窗口里完成登录…';
+  const r = await fetch('/api/auth/login', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ url }),
+  }).then(r => r.json()).catch(e => ({ error: String(e) }));
+  if (r.error) { hint.innerHTML = '启动失败：' + r.error; return; }
+  const t = setInterval(async () => {
+    const d = await fetch('/api/auth-state?url=' + encodeURIComponent(url)).then(r => r.json()).catch(() => null);
+    if (d && d.hasAuth) {
+      clearInterval(t);
+      hint.innerHTML = '✓ 登录态已保存，之后审查会自动带上。';
+      checkAuth();
+    }
+  }, 3000);
+});
 
 $('#btn-site').addEventListener('click', async () => {
   const url = $('#site-url').value.trim();
   if (!url) return fail('请输入网址');
-  start('/api/review/site', { url, industry: $('#site-industry').value, mobile: true });
+  start('/api/review/site', { url, industry: $('#site-industry').value, mobile: true, model: currentModelId });
 });
 
 $('#btn-img').addEventListener('click', async () => {
@@ -123,10 +271,15 @@ $('#btn-img').addEventListener('click', async () => {
   const dataUrl = await new Promise(res => {
     const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f);
   });
-  start('/api/review/image', { dataUrl, filename: f.name, type: $('#img-type').value });
+  start('/api/review/image', { dataUrl, filename: f.name, type: $('#img-type').value, model: currentModelId });
 });
 
 function fail(msg) { $('#error').innerHTML = `<div class="error">${msg}</div>`; }
+function fail2(msg, ok) {
+  const el = $('#error');
+  el.innerHTML = `<div class="notice${ok ? ' ok' : ''}">${msg}</div>`;
+  setTimeout(() => { if (el.querySelector('.notice')) el.innerHTML = ''; }, 6000);
+}
 
 function start(endpoint, payload) {
   $('#error').innerHTML = '';
@@ -188,7 +341,19 @@ function render(res, m, jobId) {
   const strengths = (v.strengths || []).map(s => `<li><svg class="icon"><use href="#i-check"/></svg>${s}</li>`).join('');
   const nexts = (v.next_actions || []).map(s => `<li><svg class="icon"><use href="#i-spark"/></svg>${s}</li>`).join('');
 
+  const loginWarn = res.loginWall ? `
+    <div class="banner banner-warn">
+      <b>⚠️ 采集到的是登录页 / 后台鉴权页</b>
+      这次的分数不代表真实业务界面。若要审后台应用内部，请先在「网站审查」页点「登录并保存会话」完成登录，再重新审查。
+    </div>` : '';
+  const serifWarn = (mtr.serifCharShare >= 0.2) ? `
+    <div class="banner banner-warn">
+      <b>⚠️ 检测到衬线中文字体${(mtr.serifFonts || []).length ? '：' + mtr.serifFonts.join('、') : ''}（占比 ${Math.round((mtr.serifCharShare||0)*100)}%）</b>
+      中文网页正文应改用黑体族（思源黑体 / 苹方 / 微软雅黑），宋体/仿宋/楷体属于过时选择。
+    </div>` : '';
+
   $('#result').innerHTML = `
+    ${loginWarn}${serifWarn}
     <div class="score-head">
       <div>
         <div class="big-score">${total}<small>/100</small></div>
@@ -197,6 +362,11 @@ function render(res, m, jobId) {
         <div class="grade"><svg class="icon"><use href="#i-target"/></svg>GRADE ${v.grade || gradeOf(total)}</div>
         <p class="verdict">${v.verdict || ''}</p>
         <div class="meta">${m === 'site' ? '网站审查' : '图片审查'} · 模型 ${v.model || 'vision'}<br>总分 = 0.45 × 指标分 + 0.55 × 视觉分（图片模式 0.6/0.4）</div>
+        <div class="actions">
+          <button id="btn-fixpack"><svg class="icon"><use href="#i-spark"/></svg>复制整改指令（给 AI 改代码）</button>
+          <button class="ghost" id="btn-fixpack-dl"><svg class="icon"><use href="#i-image"/></svg>下载 .md</button>
+        </div>
+        <p class="hint" id="fixpack-msg"></p>
       </div>
     </div>
 
@@ -217,6 +387,32 @@ function render(res, m, jobId) {
     ${shots ? `<h2><svg class="icon"><use href="#i-image"/></svg>采集产物</h2><div class="shots">${shots}</div>` : ''}
   `;
   $('#result').classList.add('on');
+
+  // 整改指令包：直接粘给 Claude Code / Cursor / OpenClaw 等 AI 编程工具
+  const copyPack = async () => {
+    const r = await fetch('/api/job/' + jobId + '/fixpack');
+    if (!r.ok) { $('#fixpack-msg').textContent = '整改指令生成失败'; return; }
+    const text = await r.text();
+    try {
+      await navigator.clipboard.writeText(text);
+      $('#fixpack-msg').textContent = '✓ 已复制（' + text.length + ' 字），可直接粘给 AI 编程工具执行';
+    } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove();
+      $('#fixpack-msg').textContent = '✓ 已复制（' + text.length + ' 字）';
+    }
+  };
+  $('#btn-fixpack').addEventListener('click', copyPack);
+  $('#btn-fixpack-dl').addEventListener('click', async () => {
+    const text = await fetch('/api/job/' + jobId + '/fixpack').then(r => r.text());
+    const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '审美整改指令-' + (mtr.title || '页面').slice(0, 20) + '.md';
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+
   $('#result').scrollIntoView({ behavior: 'smooth' });
 }
 </script>

@@ -29,7 +29,47 @@ ID=$(curl -s -X POST http://127.0.0.1:8787/api/review/site \
 curl -s http://127.0.0.1:8787/api/job/$ID
 ```
 
-`industry` 可选，取值见 `skills/design-taste/scripts/benchmarks.csv`：Software/Cloud、Internet、Pharma、Finance、Retail、Luxury、Industrial、Consumer Goods、Hardware/Devices、Semiconductors、Energy、Aerospace。
+`industry` 可选，**传英文 key**（不是网页上显示的中文）。取值见 `skills/design-taste/scripts/benchmarks.csv`：
+Software/Cloud、Internet、Semiconductors、Hardware/Devices、Industrial、Auto/Battery、Auto、Energy、Mining、Conglomerate、Finance、Pharma、Healthcare、Retail、Consumer Goods、Luxury、Aerospace、Media。
+
+网页下拉里显示的是中文（软件 / SaaS / 云服务、互联网平台、半导体…），但 API 只认英文 key。
+中英对照表：`curl -s http://127.0.0.1:8787/api/industries`。
+
+选行业后，模型会拿到该行业的平均分与标杆站点作为评审参照。
+
+## 后台应用（需要登录）
+
+管理后台、内部控制台这类应用直接发网址只会停在登录页，采到的指标与截图都不代表真实界面。
+
+```bash
+# 1) 拉起可见浏览器，人工登录一次（脚本检测到登录成功自动保存会话）
+curl -s -X POST http://127.0.0.1:8787/api/auth/login \
+  -H 'content-type: application/json' -d '{"url":"http://127.0.0.1:3000/admin"}'
+
+# 2) 之后正常发起审查即可，会自动带上 data/auth/<host>.json
+```
+
+查询是否已有登录态：`curl -s "http://127.0.0.1:8787/api/auth-state?url=http://127.0.0.1:3000/admin"`
+
+如果采集结果里 `loginWall: true`，说明采到的是登录页——要么先走上面的登录流程，要么让用户截图走图片模式。
+
+## 整改指令包（给 AI 编程工具）
+
+```bash
+curl -s http://127.0.0.1:8787/api/job/$ID/fixpack
+```
+
+产出一段可直接粘给 Claude Code / Cursor / OpenClaw 的中文 Markdown：审查结论、客观指标清单、设计 token CSS 块、逐条整改任务（现状/改法/验收）、硬性约束、下一步动作。给用户提整改建议时优先给这份，而不是自己复述。
+
+## 模型选择
+
+```bash
+curl -s http://127.0.0.1:8787/api/models          # 可选模型 + 能力标记
+curl -s -X POST http://127.0.0.1:8787/api/config -H 'content-type: application/json' \
+  -d '{"model":"minimax/MiniMax-M3.1-Flash-Preview"}'   # 设为默认
+```
+
+默认 `minimax/MiniMax-M3.1-Flash-Preview`（可看图）。MiniMax 的 OpenAI 兼容端点与 Anthropic 端点都支持带图，服务端会按优先级自动尝试、任一成功即返回。
 
 ## 审查一张图片
 
@@ -60,6 +100,7 @@ job 返回 `result.visual`：verdict（一句结论）、summary（总评）、s
 - issues 按 P0/P1/P2 排，不要把 P2 混着说。
 - tokens 段落原样转成 CSS 变量建议。
 - 分数不是唯一目标：脚本 metric 分低往往是因为页面本身 token 收敛，模型视觉分才反映"好不好看"，两者要分开讲。
+- 中文网页用宋体/仿宋/楷体是过时做法（脚本会扣字体分并点名），建议一律换成黑体族。
 
 ## 排错
 
@@ -69,3 +110,6 @@ job 返回 `result.visual`：verdict（一句结论）、summary（总评）、s
 | job 一直 running | 看 `runs/<jobId>/`，若只有截图没有 job.json，采集阶段卡住，检查 playwright |
 | `模型返回的不是 JSON` | 模型输出被截断，服务端会自动重试一次；持续失败就换 `TASTE_LAB_MODEL=deepseek/deepseek-v4-pro` |
 | 页面 403 / 验证码 | review_site.py 不会绕过反爬，改用用户截图走图片模式 |
+| 采到的是登录页（`loginWall: true`） | 先 `/api/auth/login` 登录保存会话，或让用户截图走图片模式 |
+| 模型报 404 / 协议错误 | 服务端会自动换协议重试；持续失败用 `/api/config/test-model` 单独测，或换模型 |
+| `INDUSTRY_ZH is not defined` 之类 | 服务端代码有语法/引用错误，`node --check server.mjs` 定位后重载 launchd |

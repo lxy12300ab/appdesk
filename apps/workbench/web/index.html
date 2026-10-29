@@ -48,6 +48,7 @@
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></symbol>
 </svg>
 
@@ -100,9 +101,8 @@
       <select id="f-cat"><option value="">全部分类</option></select>
       <select id="f-by"><option value="">全部来源</option></select>
       <button class="btn primary" id="btn-new"><svg class="icon"><use href="#i-plus"/></svg>新建应用</button>
-      <button class="btn" id="btn-check"><svg class="icon"><use href="#i-refresh"/></svg>检查状态</button>
-      <button class="btn" id="btn-discover"><svg class="icon"><use href="#i-radar"/></svg>自动发现</button>
-      <button class="btn" id="btn-export"><svg class="icon"><use href="#i-download"/></svg>导出</button>
+      <button class="btn icon-only" id="btn-check" title="检查状态" aria-label="检查状态"><svg class="icon"><use href="#i-refresh"/></svg></button>
+      <button class="btn icon-only" id="btn-export" title="导出 Markdown" aria-label="导出 Markdown"><svg class="icon"><use href="#i-download"/></svg></button>
     </div>
 
     <div id="discover" class="discover" hidden></div>
@@ -202,7 +202,6 @@ function fillSelect(sel, items, first) {
   if (cur) el.value = cur;
 }
 
-const BY_ICON = { openclaw: 'i-bolt', codex: 'i-terminal', workbuddy: 'i-layers', claude: 'i-cog', human: 'i-user' };
 const CAT_ICON = {
   '内容生产': 'i-layers', '数据看板': 'i-chart', '业务系统': 'i-grid',
   '素材管理': 'i-folder', '开发工具': 'i-tool', '自动化': 'i-bolt', '其他': 'i-box',
@@ -233,7 +232,8 @@ function visibleApps() {
 
 function render() {
   const list = visibleApps();
-  $('#grid').innerHTML = list.map(card).join('');
+  $('#grid').innerHTML = list.map(card).join('') +
+    `<button class="add-row" id="btn-discover-row"><svg class="icon"><use href="#i-radar"/></svg>自动发现本机应用</button>`;
   $('#empty').hidden = list.length > 0;
   $('#s-total').textContent = APPS.length;
   $('#s-repo').textContent = APPS.filter(a => a.repo).length;
@@ -276,28 +276,49 @@ function card(a) {
   if (a.localPath) meta.push(`<span title="${esc(a.localPath)}"><svg class="icon"><use href="#i-folder"/></svg>${esc(a.localPath.split('/').slice(-2).join('/'))}</span>`);
   if (a.launchd) meta.push(`<span title="${esc(a.launchd)}"><svg class="icon"><use href="#i-cog"/></svg>${esc(a.launchd)}</span>`);
   if (a.deployTarget) meta.push(`<span><svg class="icon"><use href="#i-cloud"/></svg>${esc(a.deployTarget)}</span>`);
-  (a.tags || []).forEach(t => meta.push(`<span class="tag"><svg class="icon"><use href="#i-tag"/></svg>${esc(t)}</span>`));
+  (a.tags || []).forEach(t => meta.push(`<span><svg class="icon"><use href="#i-tag"/></svg>${esc(t)}</span>`));
 
   const ops = a.launchd ? `<div class="cmd-acts">
       <button class="btn sm" data-lcd="restart" data-label="${esc(a.launchd)}"><svg class="icon"><use href="#i-refresh"/></svg>重启常驻</button>
       <button class="btn sm" data-lcd="status" data-label="${esc(a.launchd)}"><svg class="icon"><use href="#i-info"/></svg>查状态</button>
     </div>` : '';
 
-  return `<article class="card" data-id="${a.id}">
+  // 主操作：本地地址优先，其次在线地址，最后仓库
+  let primary = '';
+  if (a.localUrl) primary = `<a class="btn link" href="${a.localUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-laptop"/></svg>打开</a>`;
+  else if (a.onlineUrl) primary = `<a class="btn link" href="${a.onlineUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-globe"/></svg>打开</a>`;
+  else if (a.repo) primary = `<a class="btn link" href="${a.repo}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-github"/></svg>仓库</a>`;
+
+  const running = h?.local?.status === 'up';
+  const statusLabel = running ? '运行中' : (h?.local?.status === 'down' ? '未运行' : '未探测');
+  const down = h?.local?.status === 'down';
+  const statusCls = running ? 'on' : (down ? 'off run' : 'off');
+  return `<article class="card${running ? ' live' : ''}" data-id="${a.id}">
     <div class="card-head">
-      <span class="avatar ${a.builtBy}"><svg class="icon"><use href="#${BY_ICON[a.builtBy] || 'i-box'}"/></svg></span>
+      <span class="avatar${a.category === '自动化' ? ' accent' : ''}"><svg class="icon"><use href="#${CAT_ICON[a.category] || 'i-box'}"/></svg></span>
       <div class="card-title">
         <h3>${esc(a.name)}</h3>
-        <span class="cat"><svg class="icon"><use href="#${CAT_ICON[a.category] || 'i-box'}"/></svg>${esc(a.category)} · ${esc(a.builtBy)}</span>
+        <span class="cat">${esc(a.category)} · ${esc(a.builtBy)}</span>
       </div>
-      <button class="btn sm" data-edit="${a.id}"><svg class="icon"><use href="#i-edit"/></svg>编辑</button>
+      <span class="badge ${statusCls}"><i class="dot"></i>${statusLabel}</span>
     </div>
     <p class="purpose">${esc(a.purpose) || '<span class="dim">未填写用途</span>'}</p>
-    <div class="links">${links.join('') || '<span class="dim">未配置地址</span>'}</div>
-    ${cmds.join('')}
-    <div class="meta">${meta.join('')}</div>
-    ${ops}
-    ${a.notes ? `<p class="notes">${esc(a.notes)}</p>` : ''}
+    <div class="card-actions">
+      ${primary}
+      <details class="more">
+        <summary><svg class="icon"><use href="#i-chevron"/></svg>详情</summary>
+        <div class="more-body">
+          <div class="links">${links.join('') || '<span class="dim">未配置地址</span>'}</div>
+          ${cmds.join('')}
+          <div class="meta">${meta.join('')}</div>
+          ${ops}
+          ${a.notes ? `<p class="notes">${esc(a.notes)}</p>` : ''}
+          <div class="cmd-acts">
+            <button class="btn sm" data-edit="${a.id}"><svg class="icon"><use href="#i-edit"/></svg>编辑</button>
+          </div>
+        </div>
+      </details>
+    </div>
   </article>`;
 }
 
@@ -313,6 +334,7 @@ document.addEventListener('click', async (e) => {
   else if (t.dataset.edit) openEdit(t.dataset.edit);
   else if (t.dataset.run) run(t.dataset.id, t.dataset.run);
   else if (t.dataset.lcd) launchd(t.dataset.label, t.dataset.lcd, t);
+  else if (t.id === 'btn-discover-row') discover();
   else if (t.dataset.view) {
     VIEW = t.dataset.view;
     document.querySelectorAll('.side-item[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === VIEW));
@@ -427,7 +449,6 @@ $('#form').addEventListener('submit', async (e) => {
 });
 
 $('#btn-check').addEventListener('click', check);
-$('#btn-discover').addEventListener('click', discover);
 $('#btn-export').addEventListener('click', () => {
   const a = document.createElement('a');
   a.href = '/api/export.md';

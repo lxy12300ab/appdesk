@@ -28,6 +28,7 @@ const RUNS_DIR = path.join(__dirname, 'runs');
 const DATA_DIR = path.join(__dirname, 'data');
 const AUTH_DIR = path.join(DATA_DIR, 'auth');
 const PORT = Number(process.env.TASTE_LAB_PORT || 8787);
+const MODEL_TIMEOUT_MS = 240000;
 const DEFAULT_MODEL = process.env.TASTE_LAB_MODEL || 'minimax/MiniMax-M3.1-Flash-Preview';
 const RUBRIC_PATH = path.join(__dirname, 'rubric.md');
 const OPENCLAW_JSON = path.join(os.homedir(), '.openclaw/openclaw.json');
@@ -198,6 +199,10 @@ function setJob(id, patch) {
   return job;
 }
 
+// 进程重启后，磁盘上残留的 running 状态没有进程接管，会永远挂着。
+// 超过这个时长仍为 running 的，判定为「中断」，直接收敛成 error。
+const STALE_JOB_MS = 15 * 60 * 1000;
+
 function loadJob(id) {
   const job = jobs.get(id);
   if (job) return job;
@@ -205,6 +210,15 @@ function loadJob(id) {
     const f = path.join(RUNS_DIR, id, 'job.json');
     if (fs.existsSync(f)) {
       const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+      if (j.status === 'running') {
+        const started = j.finishedAt || j.createdAt || Date.now();
+        if (Date.now() - started > STALE_JOB_MS) {
+          j.status = 'error';
+          j.error = j.error || '服务在审查过程中重启，该任务已中断，请重新发起';
+          j.finishedAt = Date.now();
+          try { fs.writeFileSync(f, JSON.stringify(j, null, 2), 'utf8'); } catch { /* ignore */ }
+        }
+      }
       jobs.set(id, j);
       return j;
     }
@@ -242,7 +256,7 @@ function industryBaseline(industry) {
   };
 }
 
-function buildJudgePrompt({ mode, metrics, extraContext, baseline }) {
+function buildJudgePrompt({ mode, metrics, extraContext, baseline, reference }) {
   return `你是一名资深品牌视觉/前端设计总监，正在为一个「审美审查台」工具产出结构化评审结果。
 
 以下是完整的评审准则，请严格按它打分：
@@ -258,6 +272,7 @@ ${JSON.stringify(metrics, null, 2)}
 ${baseline ? `\n## 行业对标基准（${baseline.industryZh}，${baseline.count} 家样本）\n- 同行业平均总分：${baseline.avg}/100\n- 同行业标杆：${baseline.top.join('；')}\n- 评分时请以同行业标杆的审美水位为参照，低于均值的问题要写进 issues。` : ''}
 ${metrics.loginWall ? '\n⚠️ 注意：本次采集到的是登录页/后台鉴权页，截图不代表真实业务界面。请在 summary 里说明这一点，issues 里不要把登录表单本身当成设计缺陷，而是给出「需要登录态才能看到真实界面」的提示。' : ''}
 ${metrics.serifCharShare ? `\n⚠️ 字体提醒：检测到页面使用了衬线中文字体（${(metrics.serifFonts || []).join('、') || '宋体/衬线'}），中文网页里这类字体已过时，正文与标题应改用黑体族（思源黑体 / 苹方 / 微软雅黑）。若截图中确实如此，请作为一条 P1 问题写出。` : ''}
+${reference ? `\n## 对标参考（重要）\n我们提供了一个参考对象。请学习它优秀的设计手法，用来修我们自己的页面。\n${reference}\n要求：借鉴的是「原理与节奏」，不是具体数值——不要照抄参考对象的色值、字号、圆角，要按我们自己页面的内容重新推导。\n在 issues 里，如果某条问题可以用参考对象的手法解决，就在 fix 里点明「参照参考对象的 XX 手法」。` : ''}
 ${extraContext ? '\n## 附加信息\n' + extraContext : ''}
 
 ## 输出格式（严格只输出一个 JSON 对象，不要任何解释文字、不要 markdown 代码块）
@@ -273,11 +288,13 @@ ${extraContext ? '\n## 附加信息\n' + extraContext : ''}
     {"priority": "P0", "area": "版式层级", "problem": "问题描述（中文，具体到可执行）", "fix": "修改建议（给出具体数值/改法）"}
   ],
   "tokens": {"font_family": "推荐字体", "font_size_hero": "64px", "body_size": "16px", "primary_color": "#XXXXXX", "accent_color": "#XXXXXX", "radius": "8px"},
-  "next_actions": ["下一步动作1", "下一步动作2"]
+  "next_actions": ["下一步动作1", "下一步动作2"],
+  "borrow": [{"from": "参考对象的哪个手法", "ours": "我们当前缺什么/哪里弱", "how": "借鉴后具体怎么改（中文，带可落地参数）"}]
 }
 P0/P1/P2 最多各 2 条，每条 problem 必须指向具体可见问题，fix 必须给出可落地参数。
 「fix」写成可以直接交给 AI 编程工具（Claude Code / Cursor 等）执行的中文指令，包含具体数值与改法，不要只说“优化一下”。
-「tokens.font_family」在中文网页里不要给宋体/衬线，默认给黑体族。`;
+「tokens.font_family」在中文网页里不要给宋体/衬线，默认给黑体族。
+${reference ? '"borrow" 字段：只有在提供了对标参考时才输出，最多 3 条，每条说明「学参考对象的哪个手法 → 我们缺什么 → 具体怎么改」。没有参考对象时输出空数组。' : ''}`;
 }
 
 /**
@@ -336,11 +353,20 @@ function resolveEndpoints(model) {
   });
 }
 
-/** 单次调用（指定协议） */
+/**
+ * 单次调用（指定协议）。
+ * images 支持两种元素：
+ *   - string                纯图片路径
+ *   - { path, label }       带标签的图片，标签会作为文字块插在图片前面
+ * 后者用于「同时看我们的页面 + 参考页面并做对比」的场景。
+ */
 async function callEndpoint({ prompt, images, ep }) {
   if (ep.api === 'anthropic-messages') {
     const content = [];
-    for (const img of images) {
+    for (const item of images) {
+      const img = typeof item === 'string' ? item : item.path;
+      const label = typeof item === 'string' ? null : item.label;
+      if (label) content.push({ type: 'text', text: label });
       const buf = fs.readFileSync(img);
       const mime = img.endsWith('.jpg') || img.endsWith('.jpeg') ? 'image/jpeg' : 'image/png';
       content.push({ type: 'image', source: { type: 'base64', media_type: mime, data: buf.toString('base64') } });
@@ -355,6 +381,7 @@ async function callEndpoint({ prompt, images, ep }) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
     const data = await res.json();
@@ -363,12 +390,16 @@ async function callEndpoint({ prompt, images, ep }) {
     return text;
   }
 
-  const content = [{ type: 'text', text: prompt }];
-  for (const img of images) {
+  const content = [];
+  for (const item of images) {
+    const img = typeof item === 'string' ? item : item.path;
+    const label = typeof item === 'string' ? null : item.label;
+    if (label) content.push({ type: 'text', text: label });
     const buf = fs.readFileSync(img);
     const mime = img.endsWith('.jpg') || img.endsWith('.jpeg') ? 'image/jpeg' : 'image/png';
     content.push({ type: 'image_url', image_url: { url: `data:${mime};base64,${buf.toString('base64')}` } });
   }
+  content.push({ type: 'text', text: prompt });
   const body = {
     model: ep.modelId,
     messages: [{ role: 'user', content }],
@@ -379,6 +410,7 @@ async function callEndpoint({ prompt, images, ep }) {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${ep.apiKey}` },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
   const data = await res.json();
@@ -420,8 +452,8 @@ function extractJsonObject(text) {
   return null;
 }
 
-async function judge({ mode, metrics, images, extraContext, model, baseline }) {
-  const prompt = buildJudgePrompt({ mode, metrics, extraContext, baseline });
+async function judge({ mode, metrics, images, extraContext, model, baseline, reference }) {
+  const prompt = buildJudgePrompt({ mode, metrics, extraContext, baseline, reference });
   const text = await callVisionModel({ prompt, images, model });
   let parsed = null;
   const chunk = extractJsonObject(text);
@@ -465,6 +497,47 @@ async function reviewSite(job) {
   const model = job.input.model || currentModel();
   const runDir = path.join(RUNS_DIR, job.id);
   fs.mkdirSync(runDir, { recursive: true });
+
+  /* ---- 第 1 步：采集参考对象 ---- */
+  const refInput = job.input.reference || null;
+  let reference = null;
+  if (refInput && (refInput.url || (refInput.images && refInput.images.length))) {
+    const refDir = path.join(runDir, 'reference');
+    fs.mkdirSync(refDir, { recursive: true });
+    const refImages = [];
+    let refMetrics = null;
+
+    if (refInput.url) {
+      try {
+        const cap = await captureReferenceSite(refInput.url, path.join(refDir, 'site'));
+        refMetrics = cap.metrics;
+        refImages.push(...cap.images.map((p) => ({ path: p, label: '【参考对象截图】' })));
+      } catch (e) {
+        refInput.urlError = String(e.message || e);
+      }
+    }
+    // 用户直接上传的参考截图
+    for (const p of refInput.images || []) {
+      refImages.push({ path: p, label: '【用户提供的参考截图】' });
+    }
+
+    if (refImages.length) {
+      /* ---- 第 2 步：提炼可迁移的设计手法 ---- */
+      try {
+        const analysis = await analyzeReference({
+          metrics: refMetrics || {},
+          images: refImages.map((x) => x.path),
+          notes: refInput.notes || '',
+          model,
+        });
+        reference = { notes: refInput.notes || '', analysis, images: refImages, metrics: refMetrics };
+      } catch (e) {
+        reference = { notes: refInput.notes || '', analysisError: String(e.message || e), images: refImages, metrics: refMetrics };
+      }
+    }
+  }
+
+  /* ---- 采集当前页面 ---- */
   const args = [path.join(DT_SKILL, 'scripts/review_site.py'), url, '--out', runDir, '--lang', 'zh'];
   if (industry) args.push('--industry', industry);
   if (mobile) args.push('--mobile');
@@ -480,7 +553,16 @@ async function reviewSite(job) {
   const images = ['fold.png', 'full.png', 'mobile.png', 'hero.png']
     .map((f) => path.join(runDir, f))
     .filter((f) => fs.existsSync(f));
-  const visual = await judge({ mode: 'site', metrics, images, model, baseline: industryBaseline(industry) });
+
+  /* ---- 第 3 步：主评审（带上参考页面截图与手法） ---- */
+  const judgeImages = reference
+    ? [...images.map((p) => ({ path: p, label: '【我们自己的页面】' })), ...reference.images]
+    : images;
+  const visual = await judge({
+    mode: 'site', metrics, images: judgeImages, model,
+    baseline: industryBaseline(industry),
+    reference: referenceBrief(reference),
+  });
   const total = Number(
     (0.45 * Number(visual.metric_score ?? metrics.metric_score ?? 0) +
       0.55 * Number(visual.visual_score ?? 0) * 10).toFixed(1)
@@ -491,6 +573,14 @@ async function reviewSite(job) {
     images: images.map((p) => path.basename(p)),
     usedAuth: useAuth,
     loginWall: !!metrics.loginWall,
+    reference: reference ? {
+      url: refInput?.url || '',
+      notes: reference.notes || '',
+      analysis: reference.analysis || null,
+      analysisError: reference.analysisError || '',
+      urlError: refInput?.urlError || '',
+      imageCount: reference.images?.length || 0,
+    } : null,
   };
 }
 
@@ -530,6 +620,104 @@ function startJob(id, mode, input) {
     .catch((err) => setJob(id, { status: 'error', error: String(err.message || err), finishedAt: Date.now() }));
 }
 
+/* ------------------------- 对标参考 ------------------------- */
+/**
+ * 对标参考：让模型「学习对方优秀的设计」来修当前页面。
+ *
+ * 分三步，避免模型直接抄像素：
+ *   1. 采集参考对象（网址 → 截图 + 指标；或直接用用户上传的截图）
+ *   2. 单独分析参考对象，提炼出「可迁移的设计手法」（原理，不是具体数值）
+ *   3. 主评审同时拿到我们的页面、参考页面截图、以及提炼出的手法，产出借鉴建议
+ *
+ * 关键在于第 2 步：如果直接把参考页面丢给主评审，模型会照抄色值和字号；
+ * 先抽象成手法再注入，模型学到的才是排版逻辑、层级策略这类可迁移的东西。
+ */
+
+/** 采集参考网址：返回 { metrics, images } */
+async function captureReferenceSite(url, outDir) {
+  fs.mkdirSync(outDir, { recursive: true });
+  const args = [path.join(DT_SKILL, 'scripts/review_site.py'), url, '--out', outDir, '--lang', 'zh'];
+  const statePath = authStatePath(url);
+  if (fs.existsSync(statePath)) args.push('--storage-state', statePath);
+  const r = await run('python3', args, { cwd: DT_SKILL });
+  const metricsPath = path.join(outDir, 'metrics.json');
+  if (!fs.existsSync(metricsPath)) {
+    throw new Error(`参考对象采集失败：${(r.stderr || r.stdout).slice(-400)}`);
+  }
+  const metrics = JSON.parse(fs.readFileSync(metricsPath, 'utf8'));
+  const images = ['fold.png', 'full.png', 'mobile.png', 'hero.png']
+    .map((f) => path.join(outDir, f))
+    .filter((f) => fs.existsSync(f));
+  return { metrics, images };
+}
+
+/** 从参考对象提炼「可迁移的设计手法」 */
+async function analyzeReference({ metrics, images, notes, model }) {
+  const prompt = `你是一位资深设计总监，正在为另一个项目做对标分析。
+
+请分析这些「参考对象」的截图与指标，**不要复制它的具体数值**（不要抄它的色值、字号、圆角），
+而是提炼出「可迁移的设计手法」——即：它为什么好看背后的排版逻辑、层级策略、视觉节奏策略。
+
+以下是参考对象的客观指标：
+${JSON.stringify(metrics, null, 2)}
+${notes ? `\n用户补充的参考要求 / 规则：\n${notes}\n` : ''}
+
+请严格输出一个 JSON 对象，不要任何解释文字、不要 markdown 代码块：
+{
+  "summary": "参考对象整体是什么设计路子（中文，2 句内）",
+  "principles": [
+    {
+      "name": "手法名称（如：单一焦点+ 满幅出血）",
+      "evidence": "在截图里看到的具体证据（中文，要可验证）",
+      "principle": "背后的可迁移原理（中文，抽象成能套用到别的页面的规则）",
+      "how_to_apply": "迁移到别的页面时具体怎么做（中文）"
+    }
+  ],
+  "signature": ["它最值得学的 1-3 个签名元素"],
+  "avoid": ["只适合它自己、不该照搬的地方（如品牌色、插画风格）"]
+}
+principles 3-6 条，每条 evidence 必须指向截图里真实可见的东西。`;
+
+  const text = await callVisionModel({ prompt, images, model });
+  const chunk = extractJsonObject(text);
+  if (!chunk) throw new Error('参考对象分析未返回合法 JSON：' + text.slice(0, 200));
+  try {
+    return JSON.parse(chunk);
+  } catch (e) {
+    const fixed = await callVisionModel({
+      model,
+      prompt: `下面是参考对象分析的 JSON，解析失败（${e.message}）。请修复它，只输出合法 JSON 对象。\n\n${chunk}`,
+      images: [],
+    });
+    const fixedChunk = extractJsonObject(fixed);
+    if (!fixedChunk) throw new Error('参考对象分析 JSON 修复失败');
+    return JSON.parse(fixedChunk);
+  }
+}
+
+/** 把参考手法渲染成给主评审看的文字块 */
+function referenceBrief(ref) {
+  if (!ref) return '';
+  const lines = [];
+  if (ref.notes) lines.push(`用户提供的参考要求 / 规则：${ref.notes}`);
+  if (ref.analysis) {
+    lines.push(`参考对象整体路子：${ref.analysis.summary || ''}`);
+    if (Array.isArray(ref.analysis.principles)) {
+      lines.push('参考对象值得学的手法（请借鉴原理，不要照抄它的具体色值/字号）：');
+      for (const p of ref.analysis.principles) {
+        lines.push(`- 【${p.name}】原理：${p.principle}｜证据：${p.evidence}｜迁移做法：${p.how_to_apply}`);
+      }
+    }
+    if (Array.isArray(ref.analysis.signature) && ref.analysis.signature.length) {
+      lines.push(`参考对象的签名元素：${ref.analysis.signature.join('、')}`);
+    }
+    if (Array.isArray(ref.analysis.avoid) && ref.analysis.avoid.length) {
+      lines.push(`不该照搬的地方：${ref.analysis.avoid.join('、')}`);
+    }
+  }
+  return lines.join('\n');
+}
+
 /* ------------------------- 整改指令包（给 AI 编程工具用） ------------------------- */
 /** 把评审结果转成一段可以直接粘给 Claude Code / Cursor / OpenClaw 的中文指令 */
 function buildFixPack(job) {
@@ -545,6 +733,30 @@ function buildFixPack(job) {
     .filter(([, x]) => x !== undefined && x !== null && x !== '')
     .map(([k, x]) => `  --${k.replace(/_/g, '-')}: ${x};`)
     .join('\n');
+
+  /* 对标借鉴：从参考对象手法 → 我们怎么改 */
+  const borrowPack = (() => {
+    const ref = r.reference;
+    const borrow = v.borrow || [];
+    const principles = ref?.analysis?.principles || [];
+    if (!borrow.length && !principles.length) return '';
+    const lines = [];
+    if (principles.length) {
+      lines.push('参考对象值得学的手法（借鉴原理，不要照抄具体数值）：');
+      for (const p of principles) {
+        lines.push(`- 【${p.name || ''}】${p.principle || ''}`);
+        if (p.how_to_apply) lines.push(`  迁移做法：${p.how_to_apply}`);
+      }
+      lines.push('');
+    }
+    if (borrow.length) {
+      lines.push('结合本页面，具体要改的是：');
+      for (const b of borrow) {
+        lines.push(`- 借鉴「${b.from || ''}」→ 我们当前：${b.ours || ''} → 改成：${b.how || ''}`);
+      }
+    }
+    return lines.join('\n');
+  })();
 
   const metrics = [
     `字体族: ${(m.fonts || []).join(', ') || '-'}`,
@@ -582,16 +794,18 @@ function buildFixPack(job) {
     '',
     '## 四、逐条整改任务（按优先级从高到低执行）',
     issues || '（无问题清单）',
+    ...(borrowPack ? ['', '## 五、对标借鉴（来自参考对象的设计手法）', borrowPack, ''] : []),
     '',
-    '## 五、硬性约束',
+    borrowPack ? '## 六、硬性约束' : '## 五、硬性约束',
     '1. 不改变页面文案含义与业务信息结构，只改视觉呈现与排版。',
     '2. 不引入新的 UI 框架或依赖；只用现有技术栈实现。',
     '3. 颜色总数 ≤ 12，字号档 ≤ 7，圆角值 ≤ 3，阴影 ≤ 2，渐变 ≤ 1。',
     '4. 中文正文字体不得使用宋体/仿宋/楷体等衬线中文字体，改用思源黑体 / 苹方 / 微软雅黑等黑体族。',
     '5. 正文对比度 ≥ 4.5:1，移动端无横向溢出，点击区 ≥ 44px。',
     '6. 改完自行检查一遍上述每一条，并列出改动文件与关键 diff。',
+    ...(borrowPack ? ['7. 只借鉴参考对象的「设计手法与节奏」，不要照抄它的具体色值、字号、品牌元素。'] : []),
     '',
-    '## 六、下一步动作',
+    borrowPack ? '## 七、下一步动作' : '## 六、下一步动作',
     (v.next_actions || []).map((x, i) => `${i + 1}. ${x}`).join('\n') || '-',
   ];
   return lines.join('\n');
@@ -607,12 +821,40 @@ const server = http.createServer(async (req, res) => {
       const body = JSON.parse(await readBody(req));
       if (!body.url) return json(res, 400, { error: '缺少 url' });
       const id = 'site-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      fs.mkdirSync(path.join(RUNS_DIR, id), { recursive: true });
+      const jobDir = path.join(RUNS_DIR, id);
+      fs.mkdirSync(jobDir, { recursive: true });
+
+      /* 参考对象：网址 + 规则文字 + 上传的参考截图 */
+      let reference = null;
+      const r = body.reference || {};
+      const refImages = [];
+      if (r.images && r.images.length) {
+        const refDir = path.join(jobDir, 'reference', 'uploads');
+        fs.mkdirSync(refDir, { recursive: true });
+        for (const item of r.images) {
+          try {
+            const dataUrl = typeof item === 'string' ? item : item.dataUrl;
+            const name = (typeof item === 'object' && item.name) || 'ref';
+            const ext = (name.split('.').pop() || 'png').toLowerCase();
+            const safeExt = ['png', 'jpg', 'jpeg', 'webp'].includes(ext) ? ext : 'png';
+            const buf = Buffer.from(String(dataUrl).split(',')[1] || '', 'base64');
+            if (!buf.length) continue;
+            const fname = `ref-${refImages.length + 1}.${safeExt}`;
+            fs.writeFileSync(path.join(refDir, fname), buf);
+            refImages.push(path.join(refDir, fname));
+          } catch { /* 跳过坏图 */ }
+        }
+      }
+      if (r.url || r.notes || refImages.length) {
+        reference = { url: (r.url || '').trim(), notes: (r.notes || '').trim(), images: refImages };
+      }
+
       startJob(id, 'site', {
         url: body.url,
         industry: body.industry || '',
         mobile: !!body.mobile,
         model: body.model || currentModel(),
+        reference,
       });
       return json(res, 200, { id });
     }

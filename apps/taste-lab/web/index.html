@@ -59,6 +59,26 @@
         <span class="auth-state" id="auth-state">未检查登录态</span>
       </div>
       <p class="hint" id="login-hint" style="display:none"></p>
+
+      <details class="ref-box" id="ref-box">
+        <summary>
+          <svg class="icon"><use href="#i-target"/></svg>
+          <span>对标参考（可选）</span>
+          <span class="ref-summary" id="ref-summary">学习对方优秀的设计来修当前页面</span>
+        </summary>
+        <div class="ref-body">
+          <p class="hint">
+            填一个参考网址，或上传参考截图，可再补充你想学的具体规则（如「学它的留白节奏」「学它的卡片比例」）。
+            工具会先单独分析参考对象、提炼出<b>可迁移的设计手法</b>，再让模型带着这些手法来评审我们的页面——借鉴的是原理，不是照抄色值字号。
+          </p>
+          <div class="row">
+            <input type="text" id="ref-url" placeholder="参考网址（如 https://stripe.com）" style="flex:1 1 320px">
+            <input type="file" id="ref-files" accept="image/png,image/jpeg,image/webp" multiple>
+          </div>
+          <textarea id="ref-notes" rows="2" placeholder="想学的具体规则（可选）：例如「学习它的首屏留白节奏」「学习它的表格密度」「学习它的配色克制」"></textarea>
+          <div class="ref-thumbs" id="ref-thumbs"></div>
+        </div>
+      </details>
     </div>
 
     <div id="pane-image" style="display:none">
@@ -259,10 +279,40 @@ $('#btn-login').addEventListener('click', async () => {
   }, 3000);
 });
 
+/* ---------------- 对标参考：截图收集 ---------------- */
+const REF_FILES = [];
+$('#ref-files').addEventListener('change', async (e) => {
+  REF_FILES.length = 0;
+  for (const f of e.target.files) REF_FILES.push(f);
+  renderRefThumbs();
+});
+function renderRefThumbs() {
+  const box = $('#ref-thumbs');
+  if (!REF_FILES.length) { box.innerHTML = ''; return; }
+  box.innerHTML = REF_FILES.map((f, i) =>
+    `<figure class="ref-thumb"><img src="${URL.createObjectURL(f)}" alt=""><figcaption>${f.name}</figcaption></figure>`).join('');
+}
+async function collectReference() {
+  const url = $('#ref-url').value.trim();
+  const notes = $('#ref-notes').value.trim();
+  if (!url && !notes && !REF_FILES.length) return null;
+  const images = [];
+  for (const f of REF_FILES) {
+    const dataUrl = await new Promise(res => {
+      const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f);
+    });
+    images.push({ dataUrl, name: f.name });
+  }
+  return { url, notes, images };
+}
+
 $('#btn-site').addEventListener('click', async () => {
   const url = $('#site-url').value.trim();
   if (!url) return fail('请输入网址');
-  start('/api/review/site', { url, industry: $('#site-industry').value, mobile: true, model: currentModelId });
+  const reference = await collectReference();
+  const payload = { url, industry: $('#site-industry').value, mobile: true, model: currentModelId };
+  if (reference) payload.reference = reference;
+  start('/api/review/site', payload);
 });
 
 $('#btn-img').addEventListener('click', async () => {
@@ -341,6 +391,40 @@ function render(res, m, jobId) {
   const strengths = (v.strengths || []).map(s => `<li><svg class="icon"><use href="#i-check"/></svg>${s}</li>`).join('');
   const nexts = (v.next_actions || []).map(s => `<li><svg class="icon"><use href="#i-spark"/></svg>${s}</li>`).join('');
 
+  /* ---------------- 对标借鉴板块 ---------------- */
+  const ref = res.reference || null;
+  const borrow = v.borrow || [];
+  const principles = ref?.analysis?.principles || [];
+  let refBlock = '';
+  if (ref) {
+    const sig = ref.analysis?.signature || [];
+    const avoid = ref.analysis?.avoid || [];
+    const principleRows = principles.map(p => `
+      <div class="principle">
+        <b>${p.name || ''}</b>
+        <div class="principle-part"><span>原理</span><p>${p.principle || ''}</p></div>
+        <div class="principle-part"><span>证据</span><p>${p.evidence || ''}</p></div>
+        <div class="principle-part"><span>迁移做法</span><p>${p.how_to_apply || ''}</p></div>
+      </div>`).join('');
+    const borrowRows = borrow.map(b => `
+      <div class="borrow">
+        <div class="borrow-from"><svg class="icon"><use href="#i-target"/></svg><span>${b.from || ''}</span></div>
+        <div class="borrow-ours"><span>我们缺</span><p>${b.ours || ''}</p></div>
+        <div class="borrow-how"><span>怎么改</span><p>${b.how || ''}</p></div>
+      </div>`).join('');
+    refBlock = `
+      <h2><svg class="icon"><use href="#i-target"/></svg>对标借鉴</h2>
+      <p class="summary">${ref.analysis?.summary || '（参考对象分析失败）'}</p>
+      ${ref.url ? `<p class="meta">参考对象：${ref.url}</p>` : ''}
+      ${ref.analysisError ? `<div class="banner banner-warn"><b>⚠️ 参考对象分析失败</b>${ref.analysisError}</div>` : ''}
+      ${ref.urlError ? `<div class="banner banner-warn"><b>⚠️ 参考网址采集失败</b>${ref.urlError}</div>` : ''}
+      ${principleRows ? `<h2>参考对象值得学的手法</h2><div class="principles">${principleRows}</div>` : ''}
+      ${sig.length ? `<div class="ref-tags"><b>签名元素</b>${sig.map(x => `<span>${x}</span>`).join('')}</div>` : ''}
+      ${avoid.length ? `<div class="ref-tags"><b>不该照搬</b>${avoid.map(x => `<span>${x}</span>`).join('')}</div>` : ''}
+      ${borrowRows ? `<h2>我们该怎么改（借鉴到本页面）</h2><div class="borrows">${borrowRows}</div>` : ''}
+    `;
+  }
+
   const loginWarn = res.loginWall ? `
     <div class="banner banner-warn">
       <b>⚠️ 采集到的是登录页 / 后台鉴权页</b>
@@ -380,6 +464,7 @@ function render(res, m, jobId) {
     <p class="summary">${v.summary || ''}</p>
 
     ${strengths ? `<h2><svg class="icon"><use href="#i-check"/></svg>做得好的地方</h2><ul class="clean">${strengths}</ul>` : ''}
+    ${refBlock}
     <h2><svg class="icon"><use href="#i-alert"/></svg>问题清单</h2>
     <div class="issues">${issues || '<div class="issue"><p>模型未返回问题清单。</p></div>'}</div>
     ${tokenRows ? `<h2><svg class="icon"><use href="#i-spark"/></svg>建议 token</h2><div class="tokens">${tokenRows}</div>` : ''}

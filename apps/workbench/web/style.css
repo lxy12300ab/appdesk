@@ -223,6 +223,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 /* 未探测=虚线空心圆；未运行=实心灰点 —— 状态不只靠颜色区分 */
 .badge.off .dot { background: transparent; border: 1px dashed var(--muted); }
 .badge.off.run .dot { background: var(--muted); border: 0; }
+.badge.off.run .dot { background: var(--muted); border: 0; }
 .card-title .cat { font-size: var(--fs-aux); line-height: 20px; color: var(--muted); }
 
 .dim { color: var(--muted); }
@@ -283,9 +284,9 @@ details.more:not([open]) > .more-body { display: none; }
 .links a svg { width: 13px; height: 13px; }
 
 .dot { width: 7px; height: 7px; border-radius: var(--r-pill); display: inline-block; background: var(--line); flex: 0 0 7px; }
-.dot.up { background: var(--ok); }
-.dot.down { background: var(--danger); }
-.dot.none { background: var(--line); }
+.dot.up { background: var(--accent); }
+.dot.down { background: var(--muted); }
+.dot.none { background: var(--muted); }
 
 .cmd { background: var(--panel-2); border-radius: var(--r-sm); padding: 10px 11px; display: grid; gap: 7px; }
 .cmd-head { display: flex; align-items: center; gap: 6px; font-size: var(--fs-aux); color: var(--muted); }

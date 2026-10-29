@@ -222,7 +222,7 @@ button.mini { height: 30px; padding: 0 10px; font-size: var(--fs-aux); font-weig
 .theme-toggle:hover { border-color: var(--muted); color: var(--ink); }
 .theme-toggle svg { width: 15px; height: 15px; }
 .theme-toggle .track { width: 30px; height: 17px; border-radius: var(--r-pill); background: transparent; border: 1px solid var(--line); position: relative; }
-.theme-toggle .track i { position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: var(--r-pill); background: var(--muted); transition: transform .22s; }
+.theme-toggle .track i { position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: var(--r-pill); background: var(--ink); transition: transform .22s; }
 html[data-theme="light"] .theme-toggle .track { background: var(--accent); }
 html[data-theme="light"] .theme-toggle .track i { transform: translateX(13px); background: var(--panel); }
 
@@ -290,7 +290,7 @@ input[type=file] { color: var(--muted); font-size: var(--fs-body); height: 44px;
 input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 button {
-  background: var(--accent); color: #10120a; border: 0; cursor: pointer;
+  background: var(--accent); color: var(--bg); border: 0; cursor: pointer;
   height: 44px; padding: 0 22px; border-radius: var(--r-sm);
   font-family: var(--sans); font-weight: 700; font-size: var(--fs-body);
   transition: filter .15s, opacity .15s;

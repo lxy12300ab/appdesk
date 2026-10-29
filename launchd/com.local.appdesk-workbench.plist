@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  应用工作台（端口 8788）。
+
+  为什么要 launchd：挂在 OpenClaw 会话下的子进程会被会话回收/网关重启带走
+  （2026-10-28 在 taste-lab 上实测过两次），本地工具必须独立常驻。
+
+  运维：
+    launchctl list | grep workbench
+    launchctl kickstart -k gui/$(id -u)/com.local.appdesk-workbench
+    tail -f /tmp/appdesk-workbench.err.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.appdesk-workbench</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>__REPO_ROOT__/apps/workbench/server.mjs</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__REPO_ROOT__/apps/workbench</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>__HOME__/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key>
+    <string>__HOME__</string>
+    <key>LANG</key>
+    <string>zh_CN.UTF-8</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/appdesk-workbench.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/appdesk-workbench.err.log</string>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

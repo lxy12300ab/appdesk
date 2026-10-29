@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-28T15:58:11.723Z",
+  "apps": [
+    {
+      "id": "my-app",
+      "name": "我的应用",
+      "purpose": "这个应用解决什么问题",
+      "category": "开发工具",
+      "builtBy": "openclaw",
+      "repo": "https://github.com/your-account/your-repo",
+      "localPath": "/path/to/project",
+      "localUrl": "http://127.0.0.1:3000",
+      "onlineUrl": "https://example.com",
+      "deployTarget": "/www/wwwroot/your-app",
+      "localStart": "cd /path/to/project && npm run dev",
+      "onlineUpdate": "cd /www/wwwroot/your-app && bash deploy.sh",
+      "launchd": "com.local.your-app",
+      "tags": [
+        "示例"
+      ],
+      "notes": "备注"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Taste Lab 审美审查台（端口 8787）。
+
+  为什么要 launchd：进程挂在 OpenClaw 网关下会被会话回收/网关重启带走
+  （2026-10-28 实测两次），本地工具必须独立常驻。
+
+  改完重载：
+    launchctl unload ~/Library/LaunchAgents/com.local.appdesk-taste-lab.plist
+    launchctl load   ~/Library/LaunchAgents/com.local.appdesk-taste-lab.plist
+  查状态：launchctl list | grep taste-lab
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.appdesk-taste-lab</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>__REPO_ROOT__/apps/taste-lab/server.mjs</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__REPO_ROOT__/apps/taste-lab</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>__HOME__/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key>
+    <string>__HOME__</string>
+    <key>LANG</key>
+    <string>zh_CN.UTF-8</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/appdesk-taste-lab.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/appdesk-taste-lab.err.log</string>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

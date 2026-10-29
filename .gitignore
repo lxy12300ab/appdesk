@@ -1,0 +1,7 @@
+# 真实登记数据（含内网地址/部署路径），不入库
+apps/workbench/data/apps.json
+# 运行时产物
+apps/*/runs/
+*.log
+.DS_Store
+node_modules/

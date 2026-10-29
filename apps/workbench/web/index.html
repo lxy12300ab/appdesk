@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>应用工作台 · App Workbench</title>
+<link rel="icon" href='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%236ee7b7%22/%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%2308110d%22%20stroke-width%3D%224%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M32%2012%2052%2022%2032%2032%2012%2022z%22/%3E%3Cpath%20d%3D%22M12%2032l20%2010%2020-10M12%2042l20%2010%2020-10%22/%3E%3C/g%3E%3C/svg%3E'>
+<link rel="stylesheet" href="/web/style.css">
+<script>
+  // 尽早应用主题，避免闪白
+  try {
+    const t = localStorage.getItem('workbench-theme') || 'dark';
+    document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8v8a2 2 0 0 1-1 1.7l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.7l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m6 9 3 3-3 3M13 15h5"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 15l4-5 3 3 5-7"/></symbol>
+  <symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 14a1.7 1.7 0 0 0-1.6-1H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 3 8a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 7 3.6 1.7 1.7 0 0 0 8 3V3a2 2 0 1 1 4 0v.1A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></symbol>
+  <symbol id="i-tool" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 21H3l9.7-9.7a4 4 0 0 1 2-5z"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2 2 0 0 0-2.9-.1z"/><path d="M12 15 9 12a11 11 0 0 1 2.5-6C14 3 17 2 21 2c0 4-1 7-4 9.5A11 11 0 0 1 12 15z"/><path d="M9 12H5s.5-2 2-3.5"/><path d="M12 15v4s2-.5 3.5-2"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></symbol>
+  <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 20 6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 20h16"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4 1.4-4-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.3 4.3 0 0 0-.1-3.2s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6 0C6.6 2.8 5.6 3.1 5.6 3.1a4.3 4.3 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.2 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-9 9-9-9z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19a4.5 4.5 0 0 0 .5-9 6 6 0 0 0-11.5 1.5A3.8 3.8 0 0 0 7 19z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></symbol>
+</svg>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><svg class="icon"><use href="#i-layers"/></svg></div>
+      <div>
+        <b>应用工作台</b>
+        <span>App Workbench</span>
+      </div>
+    </div>
+
+    <div class="side-group">
+      <div class="side-label">视图</div>
+      <button class="side-item on" data-view="all"><svg class="icon"><use href="#i-grid"/></svg>全部应用<span class="n" id="n-all">0</span></button>
+      <button class="side-item" data-view="running"><svg class="icon"><use href="#i-play"/></svg>运行中<span class="n" id="n-running">0</span></button>
+      <button class="side-item" data-view="repo"><svg class="icon"><use href="#i-github"/></svg>已入库<span class="n" id="n-repo">0</span></button>
+    </div>
+
+    <div class="side-group" id="side-cats">
+      <div class="side-label">分类</div>
+    </div>
+
+    <div class="side-foot">
+      <button class="theme-toggle" id="theme-toggle" title="切换深浅色">
+        <svg class="icon" id="theme-icon"><use href="#i-sun"/></svg>
+        <span id="theme-label">浅色模式</span>
+        <span class="track"><i></i></span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="kicker">个人应用登记台</div>
+        <h1>我做的应用，<em>都在这儿</em></h1>
+        <p class="lede">统一登记本地开发的应用：本地地址、在线地址、GitHub、启动方法、线上更新方法、由哪个 AI 开发。一屏看清哪个在跑、哪个该更新。</p>
+      </div>
+      <div class="head-stats">
+        <div class="stat"><b id="s-total">0</b><span>应用</span></div>
+        <div class="stat"><b id="s-up">0</b><span>运行中</span></div>
+        <div class="stat"><b id="s-repo">0</b><span>已入库</span></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="搜索名称 / 用途 / 标签…">
+      <select id="f-cat"><option value="">全部分类</option></select>
+      <select id="f-by"><option value="">全部来源</option></select>
+      <button class="btn primary" id="btn-new"><svg class="icon"><use href="#i-plus"/></svg>新建应用</button>
+      <button class="btn" id="btn-check"><svg class="icon"><use href="#i-refresh"/></svg>检查状态</button>
+      <button class="btn" id="btn-discover"><svg class="icon"><use href="#i-radar"/></svg>自动发现</button>
+      <button class="btn" id="btn-export"><svg class="icon"><use href="#i-download"/></svg>导出</button>
+    </div>
+
+    <div id="discover" class="discover" hidden></div>
+    <main id="grid" class="grid"></main>
+    <p class="empty" id="empty" hidden><svg class="icon"><use href="#i-box"/></svg><br>还没有登记的应用。点「新建应用」或「自动发现」扫一遍本机。</p>
+  </main>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="m-title">新建应用</h2>
+      <button class="btn icon-only" id="m-close"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <form id="form">
+      <div class="row2">
+        <label>应用名称<input name="name" required placeholder="我的应用"></label>
+        <label>ID<input name="id" placeholder="留空自动生成"></label>
+      </div>
+      <label>用途<textarea name="purpose" rows="2" placeholder="这个应用解决什么问题"></textarea></label>
+      <div class="row2">
+        <label>分类<select name="category"></select></label>
+        <label>开发来源<select name="builtBy"></select></label>
+      </div>
+      <div class="row2">
+        <label>本地地址<input name="localUrl" placeholder="http://127.0.0.1:8843"></label>
+        <label>在线地址<input name="onlineUrl" placeholder="https://…"></label>
+      </div>
+      <label>GitHub 仓库<input name="repo" placeholder="https://github.com/…"></label>
+      <div class="row2">
+        <label>本地路径<input name="localPath" placeholder="/Users/…"></label>
+        <label>部署目标<input name="deployTarget" placeholder="部署目录，如 /www/wwwroot/your-app"></label>
+      </div>
+      <label>本地启动方法<textarea name="localStart" rows="2" placeholder="cd … && python3 …"></textarea></label>
+      <label>线上版本更新方法<textarea name="onlineUpdate" rows="2" placeholder="cd /www/wwwroot/your-app && bash deploy.sh"></textarea></label>
+      <div class="row2">
+        <label>常驻服务（launchd）<input name="launchd" placeholder="com.local.your-app"></label>
+        <label>标签<input name="tags" placeholder="逗号分隔"></label>
+      </div>
+      <label>备注<textarea name="notes" rows="2"></textarea></label>
+      <div class="sheet-foot">
+        <button type="button" class="btn" id="m-cancel">取消</button>
+        <button type="submit" class="btn primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="console" hidden>
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="c-title">执行输出</h2>
+      <button class="btn icon-only" id="c-close"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <pre id="c-out" class="console"></pre>
+    <div class="sheet-foot"><button class="btn" id="c-done">关闭</button></div>
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let APPS = [];
+let META = { builtBy: [], categories: [] };
+let HEALTH = {};
+let VIEW = 'all';
+
+/* ---------------- 主题 ---------------- */
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('workbench-theme', t); } catch (e) {}
+  $('#theme-icon').innerHTML = `<use href="#i-${t === 'dark' ? 'sun' : 'moon'}"/>`;
+  $('#theme-label').textContent = t === 'dark' ? '浅色模式' : '深色模式';
+}
+$('#theme-toggle').addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+});
+applyTheme(document.documentElement.dataset.theme || 'dark');
+
+/* ---------------- 数据 ---------------- */
+async function load() {
+  const r = await fetch('/api/apps').then(r => r.json());
+  APPS = r.apps || [];
+  META = r.meta || META;
+  fillSelect('#f-cat', META.categories, '全部分类');
+  fillSelect('#f-by', META.builtBy, '全部来源');
+  fillSelect('[name=category]', META.categories);
+  fillSelect('[name=builtBy]', META.builtBy);
+  renderSideCats();
+  render();
+}
+
+function fillSelect(sel, items, first) {
+  const el = $(sel);
+  const cur = el.value;
+  el.innerHTML = (first ? `<option value="">${first}</option>` : '') +
+    items.map(x => `<option value="${x}">${x}</option>`).join('');
+  if (cur) el.value = cur;
+}
+
+const BY_ICON = { openclaw: 'i-bolt', codex: 'i-terminal', workbuddy: 'i-layers', claude: 'i-cog', human: 'i-user' };
+const CAT_ICON = {
+  '内容生产': 'i-layers', '数据看板': 'i-chart', '业务系统': 'i-grid',
+  '素材管理': 'i-folder', '开发工具': 'i-tool', '自动化': 'i-bolt', '其他': 'i-box',
+};
+
+function renderSideCats() {
+  const counts = {};
+  APPS.forEach(a => counts[a.category] = (counts[a.category] || 0) + 1);
+  const items = META.categories.filter(c => counts[c]);
+  $('#side-cats').innerHTML = '<div class="side-label">分类</div>' + items.map(c =>
+    `<button class="side-item ${VIEW === 'cat:' + c ? 'on' : ''}" data-view="cat:${c}">
+      <svg class="icon"><use href="#${CAT_ICON[c] || 'i-box'}"/></svg>${c}<span class="n">${counts[c]}</span></button>`).join('');
+}
+
+function visibleApps() {
+  const q = $('#q').value.trim().toLowerCase();
+  const cat = $('#f-cat').value, by = $('#f-by').value;
+  return APPS.filter(a => {
+    if (by && a.builtBy !== by) return false;
+    if (cat && a.category !== cat) return false;
+    if (VIEW === 'running' && HEALTH[a.id]?.local?.status !== 'up') return false;
+    if (VIEW === 'repo' && !a.repo) return false;
+    if (VIEW.startsWith('cat:') && a.category !== VIEW.slice(4)) return false;
+    if (q && !(a.name + a.purpose + (a.tags || []).join('') + a.notes).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function render() {
+  const list = visibleApps();
+  $('#grid').innerHTML = list.map(card).join('');
+  $('#empty').hidden = list.length > 0;
+  $('#s-total').textContent = APPS.length;
+  $('#s-repo').textContent = APPS.filter(a => a.repo).length;
+  $('#s-up').textContent = Object.values(HEALTH).filter(h => h.local?.status === 'up').length;
+  $('#n-all').textContent = APPS.length;
+  $('#n-running').textContent = Object.values(HEALTH).filter(h => h.local?.status === 'up').length;
+  $('#n-repo').textContent = APPS.filter(a => a.repo).length;
+}
+
+function dot(h) {
+  if (!h) return '<i class="dot none"></i>';
+  const s = h.status === 'up' ? 'up' : h.status === 'down' ? 'down' : 'none';
+  return `<i class="dot ${s}" title="${h.status}${h.code ? ' ' + h.code : ''}${h.ms ? ' ' + h.ms + 'ms' : ''}"></i>`;
+}
+
+function card(a) {
+  const h = HEALTH[a.id];
+  const links = [];
+  if (a.localUrl) links.push(`<a href="${a.localUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-laptop"/></svg>本地 ${dot(h?.local)}</a>`);
+  if (a.onlineUrl) links.push(`<a href="${a.onlineUrl}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-globe"/></svg>在线 ${dot(h?.online)}</a>`);
+  if (a.repo) links.push(`<a href="${a.repo}" target="_blank" rel="noreferrer"><svg class="icon"><use href="#i-github"/></svg>GitHub</a>`);
+
+  const cmds = [];
+  if (a.localStart) cmds.push(`<div class="cmd">
+      <div class="cmd-head"><svg class="icon"><use href="#i-play"/></svg>本地启动</div>
+      <code>${esc(a.localStart)}</code>
+      <div class="cmd-acts">
+        <button class="btn sm" data-copy="${esc(a.localStart)}"><svg class="icon"><use href="#i-copy"/></svg>复制</button>
+        <button class="btn sm" data-run="start" data-id="${a.id}"><svg class="icon"><use href="#i-terminal"/></svg>执行</button>
+      </div></div>`);
+  if (a.onlineUpdate) cmds.push(`<div class="cmd">
+      <div class="cmd-head"><svg class="icon"><use href="#i-upload"/></svg>线上更新</div>
+      <code>${esc(a.onlineUpdate)}</code>
+      <div class="cmd-acts">
+        <button class="btn sm" data-copy="${esc(a.onlineUpdate)}"><svg class="icon"><use href="#i-copy"/></svg>复制</button>
+        <button class="btn sm" data-run="update" data-id="${a.id}"><svg class="icon"><use href="#i-terminal"/></svg>执行</button>
+      </div></div>`);
+
+  const meta = [];
+  if (a.localPath) meta.push(`<span title="${esc(a.localPath)}"><svg class="icon"><use href="#i-folder"/></svg>${esc(a.localPath.split('/').slice(-2).join('/'))}</span>`);
+  if (a.launchd) meta.push(`<span title="${esc(a.launchd)}"><svg class="icon"><use href="#i-cog"/></svg>${esc(a.launchd)}</span>`);
+  if (a.deployTarget) meta.push(`<span><svg class="icon"><use href="#i-cloud"/></svg>${esc(a.deployTarget)}</span>`);
+  (a.tags || []).forEach(t => meta.push(`<span class="tag"><svg class="icon"><use href="#i-tag"/></svg>${esc(t)}</span>`));
+
+  const ops = a.launchd ? `<div class="cmd-acts">
+      <button class="btn sm" data-lcd="restart" data-label="${esc(a.launchd)}"><svg class="icon"><use href="#i-refresh"/></svg>重启常驻</button>
+      <button class="btn sm" data-lcd="status" data-label="${esc(a.launchd)}"><svg class="icon"><use href="#i-info"/></svg>查状态</button>
+    </div>` : '';
+
+  return `<article class="card" data-id="${a.id}">
+    <div class="card-head">
+      <span class="avatar ${a.builtBy}"><svg class="icon"><use href="#${BY_ICON[a.builtBy] || 'i-box'}"/></svg></span>
+      <div class="card-title">
+        <h3>${esc(a.name)}</h3>
+        <span class="cat"><svg class="icon"><use href="#${CAT_ICON[a.category] || 'i-box'}"/></svg>${esc(a.category)} · ${esc(a.builtBy)}</span>
+      </div>
+      <button class="btn sm" data-edit="${a.id}"><svg class="icon"><use href="#i-edit"/></svg>编辑</button>
+    </div>
+    <p class="purpose">${esc(a.purpose) || '<span class="dim">未填写用途</span>'}</p>
+    <div class="links">${links.join('') || '<span class="dim">未配置地址</span>'}</div>
+    ${cmds.join('')}
+    <div class="meta">${meta.join('')}</div>
+    ${ops}
+    ${a.notes ? `<p class="notes">${esc(a.notes)}</p>` : ''}
+  </article>`;
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* ---------------- 交互 ---------------- */
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('button, a, .side-item');
+  if (!t) return;
+  if (t.dataset.copy) { await navigator.clipboard.writeText(t.dataset.copy); flash(t, '已复制'); }
+  else if (t.dataset.edit) openEdit(t.dataset.edit);
+  else if (t.dataset.run) run(t.dataset.id, t.dataset.run);
+  else if (t.dataset.lcd) launchd(t.dataset.label, t.dataset.lcd, t);
+  else if (t.dataset.view) {
+    VIEW = t.dataset.view;
+    document.querySelectorAll('.side-item[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === VIEW));
+    if (VIEW.startsWith('cat:')) $('#f-cat').value = VIEW.slice(4); else $('#f-cat').value = '';
+    renderSideCats(); render();
+  }
+});
+
+function flash(btn, msg) {
+  const old = btn.innerHTML;
+  btn.innerHTML = msg;
+  setTimeout(() => (btn.innerHTML = old), 1200);
+}
+
+async function run(appId, kind) {
+  const app = APPS.find(a => a.id === appId);
+  const cmd = kind === 'start' ? app.localStart : app.onlineUpdate;
+  if (!confirm(`确认执行？\n\n${cmd}`)) return;
+  $('#c-title').textContent = kind === 'start' ? `执行：${app.name} 启动` : `执行：${app.name} 线上更新`;
+  $('#c-out').textContent = '$ ' + cmd + '\n\n(运行中…)\n';
+  $('#console').hidden = false;
+  const r = await fetch('/api/run', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ appId, kind }),
+  }).then(r => r.json());
+  if (r.error) { $('#c-out').textContent = '错误：' + r.error; return; }
+  const poll = async () => {
+    const rec = await fetch('/api/run/' + r.runId).then(r => r.json()).catch(() => null);
+    if (!rec) return;
+    $('#c-out').textContent = '$ ' + cmd + '\n\n' + (rec.stdout || '') + (rec.stderr ? '\n[stderr]\n' + rec.stderr : '');
+    if (rec.status === 'running') setTimeout(poll, 900);
+    else {
+      $('#c-out').textContent += `\n\n— 退出码 ${rec.code ?? '?'} · ${rec.status === 'done' ? '完成' : '出错'} —`;
+      if (kind === 'start') check();
+    }
+  };
+  poll();
+}
+
+async function launchd(label, action, btn) {
+  const old = btn.innerHTML;
+  btn.innerHTML = '处理中…';
+  const r = await fetch('/api/launchd', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ label, action }),
+  }).then(r => r.json()).catch(() => ({ error: '请求失败' }));
+  btn.innerHTML = r.error ? '失败' : (action === 'restart' ? '已重启' : (r.running ? '运行中' : '未运行'));
+  setTimeout(() => { btn.innerHTML = old; if (action === 'restart') check(); }, 1600);
+}
+
+async function check() {
+  const r = await fetch('/api/check', { method: 'POST' }).then(r => r.json());
+  HEALTH = {}; (r.results || []).forEach(x => (HEALTH[x.id] = x));
+  render();
+}
+
+async function discover() {
+  $('#discover').hidden = false;
+  $('#discover').innerHTML = '<div class="loading"><svg class="icon"><use href="#i-radar"/></svg>扫描本机端口、launchd 与 GitHub 仓库…</div>';
+  const d = await fetch('/api/discover').then(r => r.json());
+  const ports = d.ports.map(p => `<span class="chip"><svg class="icon"><use href="#i-laptop"/></svg>:${p.port} <b>${esc(p.cmd)}</b> pid ${p.pid}</span>`).join('') || '<span class="dim">无</span>';
+  const agents = d.launchd.map(x => `<span class="chip"><svg class="icon"><use href="#i-cog"/></svg>${esc(x)}</span>`).join('') || '<span class="dim">无</span>';
+  const repos = d.repos.map(r => `<span class="chip"><svg class="icon"><use href="#i-github"/></svg><a href="${r.url}" target="_blank" rel="noreferrer">${esc(r.name)}</a> ${esc((r.pushedAt || '').slice(0, 10))}</span>`).join('') || '<span class="dim">无</span>';
+  $('#discover').innerHTML = `
+    <h4><svg class="icon"><use href="#i-laptop"/></svg>本机监听端口</h4><div class="chips">${ports}</div>
+    <h4><svg class="icon"><use href="#i-cog"/></svg>launchd 常驻</h4><div class="chips">${agents}</div>
+    <h4><svg class="icon"><use href="#i-github"/></svg>GitHub 仓库</h4><div class="chips">${repos}</div>`;
+}
+
+/* ---------------- 弹窗 ---------------- */
+let editing = null;
+function openEdit(id) {
+  editing = id ? APPS.find(a => a.id === id) : null;
+  $('#m-title').textContent = editing ? '编辑应用' : '新建应用';
+  const f = $('#form');
+  const v = editing || { name: '', id: '', purpose: '', category: '其他', builtBy: 'openclaw', localUrl: '', onlineUrl: '', repo: '', localPath: '', deployTarget: '', localStart: '', onlineUpdate: '', launchd: '', tags: [], notes: '' };
+  f.name.value = v.name; f.id.value = v.id; f.purpose.value = v.purpose || '';
+  f.category.value = v.category; f.builtBy.value = v.builtBy;
+  f.localUrl.value = v.localUrl || ''; f.onlineUrl.value = v.onlineUrl || '';
+  f.repo.value = v.repo || ''; f.localPath.value = v.localPath || '';
+  f.deployTarget.value = v.deployTarget || '';
+  f.localStart.value = v.localStart || ''; f.onlineUpdate.value = v.onlineUpdate || '';
+  f.launchd.value = v.launchd || ''; f.tags.value = (v.tags || []).join(',');
+  f.notes.value = v.notes || '';
+  $('#modal').hidden = false;
+  setTimeout(() => f.name.focus(), 60);
+}
+$('#btn-new').addEventListener('click', () => openEdit(null));
+$('#m-close').addEventListener('click', () => ($('#modal').hidden = true));
+$('#m-cancel').addEventListener('click', () => ($('#modal').hidden = true));
+$('#c-close').addEventListener('click', () => ($('#console').hidden = true));
+$('#c-done').addEventListener('click', () => ($('#console').hidden = true));
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { $('#modal').hidden = true; $('#console').hidden = true; }
+});
+
+$('#form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const body = {
+    name: f.name.value, id: f.id.value, purpose: f.purpose.value,
+    category: f.category.value, builtBy: f.builtBy.value,
+    localUrl: f.localUrl.value, onlineUrl: f.onlineUrl.value, repo: f.repo.value,
+    localPath: f.localPath.value, deployTarget: f.deployTarget.value,
+    localStart: f.localStart.value, onlineUpdate: f.onlineUpdate.value,
+    launchd: f.launchd.value, notes: f.notes.value,
+    tags: f.tags.value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
+  };
+  await fetch('/api/apps', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  $('#modal').hidden = true;
+  await load();
+});
+
+$('#btn-check').addEventListener('click', check);
+$('#btn-discover').addEventListener('click', discover);
+$('#btn-export').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = '/api/export.md';
+  a.download = `应用工作台-${new Date().toISOString().slice(0, 10)}.md`;
+  a.click();
+});
+$('#q').addEventListener('input', render);
+$('#f-cat').addEventListener('change', () => { VIEW = 'all'; document.querySelectorAll('.side-item[data-view]').forEach(x => x.classList.remove('on')); renderSideCats(); render(); });
+$('#f-by').addEventListener('change', render);
+
+load().then(check);
+</script>
+</body>
+</html>

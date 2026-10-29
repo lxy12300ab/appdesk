@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taste Lab · 审美审查台</title>
+<link rel="icon" href='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230d0e10%22/%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d8ff3e%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2217%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%228%22/%3E%3Cpath%20d%3D%22M32%2032%2045%2021%22/%3E%3C/g%3E%3C/svg%3E'>
+<link rel="stylesheet" href="/web/style.css">
+<script>
+  try { document.documentElement.dataset.theme = localStorage.getItem('taste-lab-theme') || 'dark'; } catch (e) {}
+</script>
+</head>
+<body>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="m21 15-5-5L5 21"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 20 6"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></symbol>
+</svg>
+
+<button class="theme-toggle" id="theme-toggle" title="切换深浅色">
+  <svg class="icon" id="theme-icon"><use href="#i-sun"/></svg>
+  <span id="theme-label">浅色模式</span>
+  <span class="track"><i></i></span>
+</button>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">Taste Lab / 审美审查台</div>
+    <h1>把 AI 的审美<em>往上拉一档</em></h1>
+    <p class="lede">两道审查台叠加：<strong>design-taste</strong> 负责品位（方向、层级、留白、token 落地），<strong>Impeccable</strong> 负责框架（排版、色彩、动效、无障碍、反 AI 模板感）。脚本先量指标，模型再看图给分，最后出一份能直接执行的整改清单。</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab on" data-mode="site"><svg class="icon"><use href="#i-globe"/></svg>网站审查</button>
+    <button class="tab" data-mode="image"><svg class="icon"><use href="#i-image"/></svg>图片审查</button>
+  </div>
+
+  <div class="panel">
+    <div id="pane-site">
+      <div class="row">
+        <input type="text" id="site-url" placeholder="https://your-site.com" value="">
+        <select id="site-industry">
+          <option value="">行业（对标基准）</option>
+          <option>Software/Cloud</option><option>Internet</option><option>Pharma</option>
+          <option>Finance</option><option>Retail</option><option>Luxury</option>
+          <option>Industrial</option><option>Consumer Goods</option><option>Hardware/Devices</option>
+        </select>
+        <button id="btn-site"><svg class="icon"><use href="#i-play"/></svg>开始审查</button>
+      </div>
+      <p class="hint">采集 1440×900 首屏 + 整页截图 + 移动端 390×844，量出颜色/字体/层级/对比度，再由模型看图评分。本地地址如 <code>http://localhost:3000</code> 同样可用。</p>
+    </div>
+
+    <div id="pane-image" style="display:none">
+      <div class="row">
+        <input type="file" id="img-file" accept="image/png,image/jpeg,image/webp">
+        <select id="img-type">
+          <option value="">自动判断类型</option>
+          <option value="photo">photo</option><option value="product">product</option>
+          <option value="poster">poster</option><option value="social">social</option>
+          <option value="ui">ui</option><option value="illustration">illustration</option>
+          <option value="figure">figure</option><option value="ai">ai</option>
+        </select>
+        <button id="btn-img"><svg class="icon"><use href="#i-play"/></svg>开始审查</button>
+      </div>
+      <p class="hint">输出调色板、构图辅助线、8 维度评分与 AI 伪影检查清单。</p>
+    </div>
+
+    <div class="status" id="status">
+      <div class="bar"><i></i></div>
+      <p id="status-text">正在采集与评审…</p>
+    </div>
+    <div id="error"></div>
+  </div>
+
+  <div class="result" id="result"></div>
+
+  <footer>Taste Lab · 本地运行 · 视觉模型 deepseek/deepseek-flash · 数据不出本机</footer>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let mode = 'site';
+
+/* 主题切换 */
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('taste-lab-theme', t); } catch (e) {}
+  $('#theme-icon').innerHTML = `<use href="#i-${t === 'dark' ? 'sun' : 'moon'}"/>`;
+  $('#theme-label').textContent = t === 'dark' ? '浅色模式' : '深色模式';
+}
+$('#theme-toggle').addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+});
+applyTheme(document.documentElement.dataset.theme || 'dark');
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  t.classList.add('on');
+  mode = t.dataset.mode;
+  $('#pane-site').style.display = mode === 'site' ? '' : 'none';
+  $('#pane-image').style.display = mode === 'image' ? '' : 'none';
+  $('#result').classList.remove('on');
+  $('#error').innerHTML = '';
+}));
+
+$('#btn-site').addEventListener('click', async () => {
+  const url = $('#site-url').value.trim();
+  if (!url) return fail('请输入网址');
+  start('/api/review/site', { url, industry: $('#site-industry').value, mobile: true });
+});
+
+$('#btn-img').addEventListener('click', async () => {
+  const f = $('#img-file').files[0];
+  if (!f) return fail('请选择图片');
+  const dataUrl = await new Promise(res => {
+    const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f);
+  });
+  start('/api/review/image', { dataUrl, filename: f.name, type: $('#img-type').value });
+});
+
+function fail(msg) { $('#error').innerHTML = `<div class="error">${msg}</div>`; }
+
+function start(endpoint, payload) {
+  $('#error').innerHTML = '';
+  $('#result').classList.remove('on');
+  $('#status').classList.add('on');
+  $('#status-text').textContent = '正在采集页面指标…';
+  setBusy(true);
+  fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+    .then(r => r.json())
+    .then(d => { if (d.error) throw new Error(d.error); return d; })
+    .then(d => poll(d.id))
+    .catch(e => { $('#status').classList.remove('on'); fail(e.message); })
+    .finally(() => setBusy(false));
+}
+
+function poll(id) {
+  const tick = () => fetch('/api/job/' + id).then(r => r.json()).then(j => {
+    if (j.status === 'running') {
+      $('#status-text').textContent = j.mode === 'site'
+        ? '已采集指标，模型正在看图打分（通常 40–120 秒）…'
+        : '已提取图像指标，模型正在评审…';
+      setTimeout(tick, 2000);
+    } else if (j.status === 'error') {
+      $('#status').classList.remove('on');
+      fail(j.error);
+    } else {
+      $('#status').classList.remove('on');
+      render(j.result, j.mode, id);
+    }
+  });
+  tick();
+}
+
+function setBusy(b) { document.querySelectorAll('button').forEach(x => x.disabled = b); }
+
+function gradeOf(t) { return t >= 88 ? 'A' : t >= 78 ? 'B' : t >= 68 ? 'C' : t >= 58 ? 'D' : 'E'; }
+
+function render(res, m, jobId) {
+  const v = res.visual || {};
+  const mtr = res.metrics || {};
+  const total = Number(v.total_score ?? 0);
+  const visual = Number(v.visual_score ?? 0) * 10;
+  const metric = Number(v.metric_score ?? mtr.metric_score ?? 0);
+  const PRI_ICON = { P0: 'i-alert', P1: 'i-info', P2: 'i-check' };
+  const issues = (v.issues || []).map(i => `
+    <div class="issue ${i.priority || 'P2'}">
+      <div class="tag"><svg class="icon"><use href="#${PRI_ICON[i.priority] || 'i-info'}"/></svg>${i.priority || 'P2'} · ${i.area || ''}</div>
+      <h3>${i.problem || ''}</h3>
+      ${i.fix ? `<p class="fix"><b>改法：</b>${i.fix}</p>` : ''}
+    </div>`).join('');
+
+  const shots = (res.images || []).map(f =>
+    `<figure class="shot"><img src="/runs/${jobId}/${f}" alt="${f}"><figcaption>${f}</figcaption></figure>`).join('');
+
+  const t = v.tokens || {};
+  const tokenRows = Object.entries(t).filter(([, x]) => x !== undefined && x !== null && x !== '').map(([k, x]) =>
+    `<div class="token"><b>${k}</b><span>${x}</span></div>`).join('');
+
+  const strengths = (v.strengths || []).map(s => `<li><svg class="icon"><use href="#i-check"/></svg>${s}</li>`).join('');
+  const nexts = (v.next_actions || []).map(s => `<li><svg class="icon"><use href="#i-spark"/></svg>${s}</li>`).join('');
+
+  $('#result').innerHTML = `
+    <div class="score-head">
+      <div>
+        <div class="big-score">${total}<small>/100</small></div>
+      </div>
+      <div>
+        <div class="grade"><svg class="icon"><use href="#i-target"/></svg>GRADE ${v.grade || gradeOf(total)}</div>
+        <p class="verdict">${v.verdict || ''}</p>
+        <div class="meta">${m === 'site' ? '网站审查' : '图片审查'} · 模型 ${v.model || 'vision'}<br>总分 = 0.45 × 指标分 + 0.55 × 视觉分（图片模式 0.6/0.4）</div>
+      </div>
+    </div>
+
+    <div class="bars">
+      <div class="bar-row"><span>总分</span><div class="bar-track"><i style="width:${total}%;background:var(--accent)"></i></div><b>${total}</b></div>
+      <div class="bar-row"><span>脚本指标分</span><div class="bar-track"><i style="width:${metric}%;background:#7aa2ff"></i></div><b>${metric}</b></div>
+      <div class="bar-row"><span>模型视觉分</span><div class="bar-track"><i style="width:${visual}%;background:#ff8f6b"></i></div><b>${visual}</b></div>
+    </div>
+
+    <h2><svg class="icon"><use href="#i-info"/></svg>总评</h2>
+    <p class="summary">${v.summary || ''}</p>
+
+    ${strengths ? `<h2><svg class="icon"><use href="#i-check"/></svg>做得好的地方</h2><ul class="clean">${strengths}</ul>` : ''}
+    <h2><svg class="icon"><use href="#i-alert"/></svg>问题清单</h2>
+    <div class="issues">${issues || '<div class="issue"><p>模型未返回问题清单。</p></div>'}</div>
+    ${tokenRows ? `<h2><svg class="icon"><use href="#i-spark"/></svg>建议 token</h2><div class="tokens">${tokenRows}</div>` : ''}
+    ${nexts ? `<h2><svg class="icon"><use href="#i-play"/></svg>下一步</h2><ul class="clean">${nexts}</ul>` : ''}
+    ${shots ? `<h2><svg class="icon"><use href="#i-image"/></svg>采集产物</h2><div class="shots">${shots}</div>` : ''}
+  `;
+  $('#result').classList.add('on');
+  $('#result').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

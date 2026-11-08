@@ -16,3 +16,5 @@ apps/taste-lab/data/
 *.log
 .DS_Store
 node_modules/
+# 能力清单扫描产物（含本机路径/命令），不入库
+apps/workbench/design/capability-data.json

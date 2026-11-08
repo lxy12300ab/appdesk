@@ -190,13 +190,22 @@ function probe(url, timeoutMs = 4000) {
     let req;
     try {
       req = lib.request(url, { method: 'GET', timeout: timeoutMs, headers: { 'user-agent': 'app-workbench/2' } }, (res) => {
-        res.resume();
         const ms = Date.now() - started;
         const code = res.statusCode;
-        if (code >= 500) return finish({ status: 'down', kind: 'http-5xx', code, ms, detail: `服务返回 ${code}` });
-        // 4xx 说明服务活着，只是要登录或路径不对 —— 不能当「挂了」
-        if (code >= 400) return finish({ status: 'up', kind: 'http-4xx', code, ms, warn: true, detail: `返回 ${code}，服务在响应（可能要登录）` });
-        finish({ status: 'up', kind: 'ok', code, ms });
+        // 只读前 2KB 判断是不是 HTML 页面（用来挑 UI 主端口），不整包下载
+        const ctype = String(res.headers['content-type'] || '');
+        let head = '';
+        res.on('data', (c) => {
+          if (head.length < 2048) head += c.toString('utf8');
+          else res.destroy();
+        });
+        res.on('close', () => {
+          const html = /text\/html/i.test(ctype) || /^\s*<(?:!doctype html|html)/i.test(head);
+          if (code >= 500) return finish({ status: 'down', kind: 'http-5xx', code, ms, html, detail: `服务返回 ${code}` });
+          // 4xx 说明服务活着，只是要登录或路径不对 —— 不能当「挂了」
+          if (code >= 400) return finish({ status: 'up', kind: 'http-4xx', code, ms, html, warn: true, detail: `返回 ${code}，服务在响应（可能要登录）` });
+          finish({ status: 'up', kind: 'ok', code, ms, html });
+        });
       });
     } catch (e) {
       return finish({ status: 'down', kind: 'error', detail: String(e.message || e) });
@@ -563,6 +572,99 @@ function checkAll() {
   return p;
 }
 
+
+
+/** 判断监听端口的进程是否是一个真正的「本地开发应用」 */
+function isRealApp(p) {
+  const cmd = p.command || '';
+  const cwd = p.cwd || '';
+  // 桌面应用内部 IPC（Electron preload / asar 资源）
+  // 只认 /Applications 下的 .app 束，不能误伤 Homebrew 的 Python.app
+  if (/\/Applications\/[^/]+\.app\//.test(cmd)) return false;
+  if (/\.asar\b|\/preload\/|fork-preload/i.test(cmd)) return false;
+  // 运行时自身（node 解释器、LLM 服务端口等）
+  if (/ollama|vllm|lmstudio|llama|\.workbuddy\/binaries|\/bin\/node$|\.venv\/bin\/python$/.test(cmd)) {
+    // .venv/bin/python 仍可能是真应用，靠 cwd 二次判断
+    if (!/\.venv\/bin\/python$/.test(cmd)) return false;
+    if (!cwd || cwd === '/' || /^\/(usr|opt|Users\/[^/]+)$/.test(cwd)) return false;
+  }
+  if (/python3?\.\d+$/.test(cmd.trim().split(/\s+/)[0] || '') && (!cwd || cwd === '/')) return false;
+  return true;
+}
+
+/** 取进程的工作目录 */
+async function processCwd(pid) {
+  const r = await run('lsof', ['-a', '-p', String(pid), '-d', 'cwd', '-Fn']);
+  for (const line of r.stdout.split('\n')) {
+    if (line.startsWith('n')) return line.slice(1).trim();
+  }
+  return '';
+}
+
+/** 取进程的完整命令行 */
+async function processCommand(pid) {
+  const r = await run('ps', ['-p', String(pid), '-o', 'command=']);
+  return (r.stdout || '').trim().split('\n')[0].trim();
+}
+
+/** 由端口信息推断一个应用登记条目 */
+function inferApp(p) {
+  const cwd = p.cwd || '';
+  const cmd = p.command || '';
+  let name = '';
+  // 目录名优先；根目录、家目录、tmp 等无信息量的路径不算
+  const noisy = /^\/(Users\/[^/]+|home\/[^/]+|tmp|var|opt|private|usr|System|Volumes)$/;
+  if (cwd && cwd !== '/' && !noisy.test(cwd)) {
+    name = path.basename(cwd);
+  }
+  if (!name || ['.', 'app', 'src', 'api', 'server', 'main', 'bin'].includes(name.toLowerCase())) {
+    // 从命令行里找一个像项目/脚本名的词
+    const guess = cmd.match(/([\w.-]+)\/([\w.-]+?)(?:\.[a-z]{2,5})?\b/g);
+    if (guess) {
+      for (const g of guess) {
+        const last = g.split('/').pop().replace(/\.[a-z]{2,5}$/, '');
+        if (last && !noisy.test(last) && !/^\d+$/.test(last)) { name = last; break; }
+      }
+    }
+  }
+  if (!name) name = `端口 ${p.port}`;
+  name = name.replace(/^\./, '').replace(/[-_]/g, ' ').trim() || `端口 ${p.port}`;
+
+  // 开发来源：按路径特征推断
+  let builtBy = 'human';
+  if (/\.openclaw\/workspace/.test(cwd) || /\.openclaw\/workspace/.test(cmd)) builtBy = 'openclaw';
+  else if (/workbuddy/i.test(cwd) || /workbuddy/i.test(cmd)) builtBy = 'workbuddy';
+  else if (/\.codex|codex/i.test(cwd) || /\.codex|codex/i.test(cmd)) builtBy = 'codex';
+
+  // npx 启动的应用，命令行里带随机缓存路径和 node 绝对路径，人没法直接用
+  // 归一化成 `npx <包名>` 形式
+  let startCmd = cmd;
+  const npx = cmd.match(/\/_npx\/[a-z0-9]+\/node_modules\/((?:@[^/]+\/)?[\w.-]+)/i);
+  if (npx) {
+    startCmd = `npx ${npx[1]}`;
+  } else {
+    startCmd = cmd.replace(/^\S*\/bin\/node\s+/, 'node ');
+  }
+
+  return {
+    id: slug(name.toLowerCase()) + '-' + p.port,
+    name,
+    purpose: '',
+    category: '其他',
+    builtBy,
+    repo: '',
+    localPath: cwd,
+    localUrl: `http://127.0.0.1:${p.port}`,
+    onlineUrl: '',
+    deployTarget: '',
+    localStart: startCmd ? `cd ${cwd || '.'} && ${startCmd}` : '',
+    onlineUpdate: '',
+    launchd: '',
+    tags: [],
+    notes: `自动发现：监听 ${p.port} 的进程 ${p.cmd}（pid ${p.pid}）`,
+  };
+}
+
 /* --------------------- 自动发现 --------------------- */
 async function discover() {
   const found = [];
@@ -578,9 +680,41 @@ async function discover() {
     const m = node.match(/^(.*):(\d+)$/);
     if (!m) continue;
     const [, host, port] = m;
-    if (['node', 'Python', 'python3', 'bun'].includes(cmd) && host.startsWith('127.0.0.1')) {
+    // 按进程名前缀匹配，避免漏掉 venv 里的 python3.1、next-server、uvicorn 等
+    const isAppServer = /^(node|python|bun|deno|ruby|php|java|dotnet|uvicorn|gunicorn|next|next-server|flask|django|fastapi|airflow|streamlit|gradio)/i.test(cmd);
+    if (isAppServer && host.startsWith('127.0.0.1')) {
       portList.push({ cmd, pid, port: Number(port) });
     }
+  }
+  // 补充每个端口对应的工作目录与完整命令行，用于自动推断登记信息
+  const detailed = [];
+  for (const p of portList) {
+    p.cwd = await processCwd(p.pid);
+    p.command = await processCommand(p.pid);
+    // 过滤桌面应用内部 IPC、运行时自身、模型服务等非「本地应用」
+    if (!isRealApp(p)) continue;
+    p.inferred = inferApp(p);
+    detailed.push(p);
+  }
+  portList.length = 0;
+  // 同一个应用常开多个端口（UI + API），按工作目录归并成一条，
+  // 主端口取能返回 HTML 页面的那个，其余作为附加端口
+  const groups = new Map();
+  for (const p of detailed) {
+    const key = p.inferred?.localPath || p.inferred?.id || `${p.port}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  }
+  for (const group of groups.values()) {
+    group.sort((a, b) => a.port - b.port);
+    let primary = group[0];
+    let rest = group.slice(1);
+    for (const cand of group) {
+      const res = await probe(`http://127.0.0.1:${cand.port}/`);
+      if (res.html) { primary = cand; rest = group.filter((x) => x !== cand); break; }
+    }
+    primary.extraPorts = rest.map((x) => x.port);
+    portList.push(primary);
   }
   // 2. launchd 常驻
   const plists = fs.existsSync(path.join(HOME, 'Library/LaunchAgents'))
@@ -595,6 +729,11 @@ async function discover() {
   const gh = await run('gh', ['repo', 'list', GH_ACCOUNT, '--limit', '50', '--json', 'name,url,pushedAt,description']);
   let repos = [];
   try { repos = JSON.parse(gh.stdout || '[]'); } catch { repos = []; }
+
+  const registered = new Set(readData().apps.map((a) => a.localUrl).filter(Boolean));
+  for (const p of portList) {
+    p.registered = registered.has(p.inferred?.localUrl);
+  }
 
   return {
     ports: portList,
@@ -717,6 +856,37 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && p === '/api/apps') {
       const data = readData();
       return json(res, 200, { ...data, meta: { builtBy: BUILT_BY, categories: CATEGORIES } });
+    }
+
+    // ---- 能力中心：三端 AI 技能资产 ----
+    if (req.method === 'GET' && p === '/api/capabilities') {
+      const f = path.join(DATA_DIR, 'capabilities.json');
+      if (!fs.existsSync(f)) return json(res, 200, { empty: true });
+      try {
+        return json(res, 200, JSON.parse(fs.readFileSync(f, 'utf8')));
+      } catch (e) {
+        return json(res, 500, { error: '读取能力数据失败：' + e.message });
+      }
+    }
+
+    if (req.method === 'POST' && p === '/api/capabilities/scan') {
+      const script = path.join(__dirname, 'tools', 'collect-capability.py');
+      const out = path.join(DATA_DIR, 'capabilities.json');
+      if (!fs.existsSync(script)) return json(res, 500, { error: '缺少采集脚本：' + script });
+      const r = await new Promise((resolve) => {
+        const cp = spawn('python3', [script, '--out', out], { cwd: __dirname });
+        let so = '', se = '';
+        cp.stdout.on('data', (d) => (so += d));
+        cp.stderr.on('data', (d) => (se += d));
+        cp.on('close', (code) => resolve({ code, stdout: so, stderr: se }));
+        cp.on('error', (e) => resolve({ code: -1, stdout: '', stderr: e.message }));
+      });
+      if (r.code !== 0) return json(res, 500, { error: r.stderr || '采集失败', log: r.stdout });
+      try {
+        return json(res, 200, { ok: true, log: r.stdout, data: JSON.parse(fs.readFileSync(out, 'utf8')) });
+      } catch (e) {
+        return json(res, 500, { error: '采集完成但读取失败：' + e.message });
+      }
     }
 
     if (req.method === 'POST' && p === '/api/apps') {

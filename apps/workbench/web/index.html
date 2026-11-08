@@ -66,6 +66,7 @@
       <button class="side-item" data-view="running"><svg class="icon"><use href="#i-play"/></svg>运行中<span class="n" id="n-running">0</span></button>
       <button class="side-item" data-view="dirty"><svg class="icon"><use href="#i-git"/></svg>待同步<span class="n" id="n-dirty">0</span></button>
       <button class="side-item" data-view="repo"><svg class="icon"><use href="#i-github"/></svg>已入库<span class="n" id="n-repo">0</span></button>
+      <button class="side-item" data-view="cap"><svg class="icon"><use href="#i-layers"/></svg>能力中心<span class="n" id="n-cap">—</span></button>
     </div>
 
     <div class="side-group" id="side-cats">
@@ -93,14 +94,14 @@
   <main class="main">
     <div class="topbar">
       <div>
-        <div class="kicker">应用导航 · APP NAVIGATOR</div>
-        <h1>应用总览</h1>
-        <p class="lede">统一登记本地开发的应用：本地地址、在线地址、GitHub、启动方法、线上更新方法、由哪个 AI 开发。一屏看清哪个在跑、哪个该更新。</p>
+        <div class="kicker" id="kicker">应用导航 · APP NAVIGATOR</div>
+        <h1 id="page-title">应用总览</h1>
+        <p class="lede" id="page-lede">统一登记本地开发的应用：本地地址、在线地址、GitHub、启动方法、线上更新方法、由哪个 AI 开发。一屏看清哪个在跑、哪个该更新。</p>
       </div>
-      <div class="head-stats">
-        <div class="stat"><b id="s-total">0</b><span>应用</span></div>
-        <div class="stat"><b id="s-up">0</b><span>运行中</span></div>
-        <div class="stat"><b id="s-repo">0</b><span>已入库</span></div>
+      <div class="head-stats" id="head-stats">
+        <div class="stat"><b id="s-total">0</b><span id="s-total-l">应用</span></div>
+        <div class="stat"><b id="s-up">0</b><span id="s-up-l">运行中</span></div>
+        <div class="stat"><b id="s-repo">0</b><span id="s-repo-l">已入库</span></div>
       </div>
     </div>
 
@@ -242,6 +243,9 @@ function visibleApps() {
 }
 
 function render() {
+  if (VIEW === 'cap') { renderCap(); return; }
+  $('#grid').classList.remove('cap-mode');
+  setHead(false);
   const list = visibleApps();
   $('#grid').innerHTML = list.map(card).join('') +
     `<button class="add-row" id="btn-discover-row"><svg class="icon"><use href="#i-radar"/></svg>自动发现本机应用</button>`;
@@ -264,6 +268,221 @@ function render() {
   $('#btn-check').title = CHECKED_AT
     ? `上次检查 ${new Date(CHECKED_AT).toLocaleTimeString('zh-CN', { hour12: false })}`
     : '检查状态';
+}
+
+/* ---------------- 能力中心 ---------------- */
+let CAP = null;
+let CAPTAB = 'wb';
+let CAPFILTER = 'used';
+const CAP_APPS = [
+  ['wb', 'WorkBuddy', '主对话 · 全量接入'],
+  ['oc', 'OpenClaw', '常驻网关 · 技能囤积'],
+  ['cx', 'Codex', '编码代理 · 几乎裸奔'],
+];
+const CAP_SRC = { workshop: '工坊', workspace: '空间', plugin: '插件', agents: '共享', mayi2: '2号', bundled: '内置' };
+const HEAD_APP = {
+  kicker: '应用导航 · APP NAVIGATOR',
+  title: '应用总览',
+  lede: '统一登记本地开发的应用：本地地址、在线地址、GitHub、启动方法、线上更新方法、由哪个 AI 开发。一屏看清哪个在跑、哪个该更新。',
+  labels: ['应用', '运行中', '已入库'],
+};
+const HEAD_CAP = {
+  kicker: '三端技能资产 · CAPABILITY',
+  title: '能力中心',
+  lede: '三个 AI 应用装了多少技能、真正跑过多少。数字取自本机调用记录，不看宣传。',
+  labels: ['技能', '用过', '僵尸率'],
+};
+
+function setHead(cap) {
+  const h = cap ? HEAD_CAP : HEAD_APP;
+  $('#kicker').textContent = h.kicker;
+  $('#page-title').textContent = h.title;
+  $('#page-lede').textContent = h.lede;
+  $('#s-total-l').textContent = h.labels[0];
+  $('#s-up-l').textContent = h.labels[1];
+  $('#s-repo-l').textContent = h.labels[2];
+  const tb = document.querySelector('.toolbar');
+  if (tb) tb.hidden = cap;
+}
+
+async function loadCap() {
+  try {
+    CAP = await fetch('/api/capabilities').then(r => r.json());
+  } catch (e) {
+    CAP = { error: String(e && e.message || e) };
+  }
+  return CAP;
+}
+
+function capStats(d) {
+  const tot = new Set(), used = new Set();
+  ['wb', 'oc', 'cx'].forEach(k => (d[k]?.items || []).forEach(i => {
+    tot.add(i.key);
+    if (i.use > 0) used.add(i.key);
+  }));
+  return { total: tot.size, used: used.size, zombie: tot.size ? Math.round((tot.size - used.size) / tot.size * 100) : 0 };
+}
+
+function renderCap() {
+  setHead(true);
+  $('#empty').hidden = true;
+  const g = $('#grid');
+  g.classList.add('cap-mode');
+  if (!CAP) { g.innerHTML = '<p class="cap-loading">正在读取本机技能数据…</p>'; return; }
+  if (CAP.error) { g.innerHTML = `<p class="cap-loading">读取失败：${esc(CAP.error)}</p>`; return; }
+  if (CAP.empty || !CAP.wb) { g.innerHTML = '<p class="cap-loading">还没有采集过技能数据，点「重新采集」。</p>'; return; }
+  g.innerHTML = capHTML(CAP);
+  const st = capStats(CAP);
+  $('#s-total').textContent = st.total;
+  $('#s-up').textContent = st.used;
+  $('#s-repo').textContent = st.zombie + '%';
+  $('#n-cap').textContent = st.total;
+}
+
+function capTrig(it) {
+  if (it.autojob) return '<i class="cap-tg job" title="已挂定时任务，连说话都不用">定时</i>';
+  if (it.trigger === 'cmd') return `<i class="cap-tg cmd" title="可以直接打 ${esc(it.cmd)}">命令</i>`;
+  if (it.trigger === 'auto') return '<i class="cap-tg auto" title="描述写清了场景，直接说做什么，AI 自己会挑它">说话就行</i>';
+  return '<i class="cap-tg named" title="描述比较笼统，最好说「用 xxx 技能做…」">要点名</i>';
+}
+
+function capRow(it) {
+  const hot = it.use >= 3 ? ' hot' : '';
+  return `<div class="cap-row">
+    <i class="cap-use${hot}">${it.use || '—'}</i>
+    <code>${esc(it.key)}</code>
+    ${capTrig(it)}
+    <span class="cap-brief">${esc(it.brief || '—')}</span>
+    ${it.src ? `<i class="cap-src">${esc(CAP_SRC[it.src] || it.src)}</i>` : ''}
+    <time>${esc(it.last || '—')}</time>
+  </div>`;
+}
+
+function capNeverRow(it) {
+  return `<div class="cap-never-row${it.disabled ? ' off' : ''}">
+    <code>${esc(it.key)}</code>
+    ${capTrig(it)}
+    <span class="cap-nb">${esc(it.brief || '—')}</span>
+    <i>${esc(CAP_SRC[it.src] || '')}${it.disabled ? ' · 已禁用' : ''}</i>
+  </div>`;
+}
+
+function capHTML(d) {
+  const cards = CAP_APPS.map(([k, label, sub]) => {
+    const st = d[k].stats;
+    const z = st.total ? Math.round((st.total - st.used) / st.total * 100) : 0;
+    return `<button class="cap-card${k === CAPTAB ? ' on' : ''}" data-cap-tab="${k}">
+      <div class="cap-card-top"><i class="cap-dot d-${k}"></i><b>${label}</b><em>${sub}</em></div>
+      <div class="cap-card-num"><strong>${st.used}</strong><span>/ ${st.total} 用过</span><u>闲置 ${z}%</u></div>
+      <div class="cap-track"><i style="width:${st.total ? (st.used / st.total * 100) : 0}%"></i></div>
+    </button>`;
+  }).join('');
+
+  const panes = CAP_APPS.map(([k]) => {
+    const items = d[k].items || [];
+    const hot = items.filter(i => i.use >= 3).sort((a, b) => b.use - a.use);
+    const used = items.filter(i => i.use > 0 && i.use < 3).sort((a, b) => b.use - a.use);
+    const never = items.filter(i => i.use === 0).sort((a, b) => (a.key < b.key ? -1 : 1));
+    let body = '';
+    if (CAPFILTER === 'never') {
+      body = never.length ? `<div class="cap-group">从未调用<b>${never.length}</b></div>` + never.map(capNeverRow).join('')
+                          : '<p class="cap-loading">这个应用没有从未调用的技能</p>';
+    } else if (CAPFILTER === 'all') {
+      body = (hot.length ? `<div class="cap-group">高频调用<b>${hot.length}</b></div>` + hot.map(capRow).join('') : '')
+           + (used.length ? `<div class="cap-group">用过<b>${used.length}</b></div>` + used.map(capRow).join('') : '')
+           + (never.length ? `<div class="cap-group">从未调用<b>${never.length}</b></div>` + never.map(capNeverRow).join('') : '');
+    } else {
+      body = (hot.length ? `<div class="cap-group">高频调用<b>${hot.length}</b></div>` + hot.map(capRow).join('') : '')
+           + (used.length ? `<div class="cap-group">用过<b>${used.length}</b></div>` + used.map(capRow).join('') : '')
+           + (!hot.length && !used.length ? '<p class="cap-loading">这个应用还没有调用记录，切到「从未调用」看全部</p>' : '');
+    }
+    return `<div class="cap-pane" data-pane="${k}"${k === CAPTAB ? '' : ' hidden'}>${body}</div>`;
+  }).join('');
+
+  const dupes = (d.dupes || []).filter(x => x.state === 'diff');
+  const dupRows = dupes.slice(0, 5).map(x =>
+    `<div class="cap-kv"><code>${esc(x.key)}</code><i>${x.newer === 'wb' ? 'WB 新' : '共享库新'}</i></div>`).join('');
+
+  const ocSrc = {};
+  (d.oc.items || []).forEach(i => { ocSrc[i.src] = (ocSrc[i.src] || 0) + 1; });
+  const srcMax = Math.max(...Object.values(ocSrc), 1);
+  const srcRows = ['workspace', 'bundled', 'workshop', 'agents', 'plugin', 'mayi2']
+    .filter(s => ocSrc[s]).map(s => `<div class="cap-bar">
+      <span>${CAP_SRC[s] || s}</span>
+      <div><i style="width:${ocSrc[s] / srcMax * 100}%"></i></div>
+      <b>${ocSrc[s]}</b>
+    </div>`).join('');
+
+  const gap = d.codexGap || {};
+  const SYNC_CMD = 'cd /Users/linxianyao/WorkBuddy/2026-10-29-11-20-51 && ./tools/skill-sync.sh sync --apply';
+  return `<div class="cap-wrap">
+    <div class="cap-meta">
+      <span>采集于 ${esc(d.generatedAt || '—')} · 共 ${capStats(d).total} 个技能</span>
+      <button class="btn" id="btn-cap-scan"><svg class="icon"><use href="#i-refresh"/></svg>重新采集</button>
+    </div>
+
+    <div class="cap-legend">
+      <div><i class="cap-tg auto">说话就行</i><span>描述里写清了什么场景用，你直接说要做的事，AI 自己去挑</span></div>
+      <div><i class="cap-tg named">要点名</i><span>描述比较笼统，说「用 xxx 技能做…」命中率更高</span></div>
+      <div><i class="cap-tg job">定时</i><span>已经挂在定时任务上，到点自己跑，不用你开口</span></div>
+    </div>
+
+    <div class="cap-cards">${cards}</div>
+    <div class="cap-body">
+      <div class="cap-left">
+        <div class="cap-filters">
+          ${(() => { const cur = d[CAPTAB].stats; return [['used', '用过', cur.used], ['never', '从未调用', cur.total - cur.used], ['all', '全部', cur.total]]; })().map(([k, label, n]) =>
+            `<button data-cap-filter="${k}" class="${CAPFILTER === k ? 'on' : ''}">${label}<b>${n}</b></button>`).join('')}
+        </div>
+        <div class="cap-list">${panes}</div>
+      </div>
+      <div class="cap-side">
+        <div class="cap-note${dupes.length ? ' warn' : ''}">
+          <h4><svg class="icon"><use href="#i-${dupes.length ? 'bolt' : 'check'}"/></svg>双端同步${dupes.length ? '：' + dupes.length + ' 个不一致' : '：已一致'}</h4>
+          <p>${dupes.length
+            ? `${dupes.length} 个同名技能两边内容不同，改一边另一边不会跟着变。`
+            : '14 个同名技能两边内容一致。以后任一边改过，跑一次下面这条就会拉平。'}</p>
+          ${dupRows}
+          <code class="cap-cmd" data-copy="${esc(SYNC_CMD)}" title="点一下复制">${esc(SYNC_CMD)}</code>
+          <button class="btn cap-copy" data-copy="${esc(SYNC_CMD)}"><svg class="icon"><use href="#i-copy"/></svg>复制命令</button>
+        </div>
+        <div class="cap-note">
+          <h4><svg class="icon"><use href="#i-terminal"/></svg>Codex 常驻层空白</h4>
+          <p><code>AGENTS.md</code> 为 ${gap.agentsMdBytes ?? 0} 字节，等于没有常驻指令。${gap.sessionCount ?? 0} 个会话全靠每次对话临时说明。</p>
+          <div class="cap-kpis">
+            <div><b>${gap.agentsMdBytes ?? 0}</b><span>AGENTS.md 字节</span></div>
+            <div><b>${gap.ruleCount ?? 0}</b><span>命令白名单</span></div>
+          </div>
+        </div>
+        <div class="cap-note">
+          <h4><svg class="icon"><use href="#i-layers"/></svg>OpenClaw 从哪来的</h4>
+          ${srcRows}
+          <p class="dim">空间和内置两项占了七成，真正自己写的工坊技能反而最少用</p>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function capShowTab(k) {
+  CAPTAB = k;
+  renderCap();
+}
+
+function capFold(btn) {
+  const body = btn.previousElementSibling;
+  if (!body) return;
+  body.hidden = !body.hidden;
+  btn.classList.toggle('open', !body.hidden);
+  const lab = btn.querySelector('em');
+  if (lab) lab.textContent = body.hidden ? '展开' : '收起';
+  if (!body.hidden) {
+    const box = btn.closest('.cap-list');
+    if (box) requestAnimationFrame(() => {
+      const top = body.getBoundingClientRect().top - box.getBoundingClientRect().top;
+      box.scrollTop = Math.max(0, box.scrollTop + top - 8);
+    });
+  }
 }
 
 function dot(h) {
@@ -488,11 +707,28 @@ document.addEventListener('click', async (e) => {
   else if (t.dataset.expand) expandCard(t.dataset.expand, t);
   else if (t.dataset.gitverify) verifyGit(t.dataset.gitverify, t);
   else if (t.id === 'btn-discover-row') discover();
+  else if (t.dataset.register) registerFound(t.dataset.register, t.dataset.port);
+  else if (t.dataset.capTab) capShowTab(t.dataset.capTab);
+  else if (t.dataset.capFilter) { CAPFILTER = t.dataset.capFilter; render(); }
+  else if (t.id === 'btn-cap-scan') {
+    const old = t.innerHTML;
+    t.disabled = true;
+    t.innerHTML = '采集中…';
+    const r = await fetch('/api/capabilities/scan', { method: 'POST' })
+      .then(x => x.json()).catch(e => ({ error: String(e) }));
+    t.disabled = false;
+    t.innerHTML = old;
+    if (r.error) { alert('采集失败：' + r.error); return; }
+    CAP = r.data;
+    render();
+  }
   else if (t.dataset.view) {
     VIEW = t.dataset.view;
     document.querySelectorAll('.side-item[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === VIEW));
     if (VIEW.startsWith('cat:')) $('#f-cat').value = VIEW.slice(4); else $('#f-cat').value = '';
-    renderSideCats(); render();
+    renderSideCats();
+    if (VIEW === 'cap') await loadCap();
+    render();
   }
 });
 
@@ -607,13 +843,54 @@ async function discover() {
   $('#discover').hidden = false;
   $('#discover').innerHTML = '<div class="loading"><svg class="icon"><use href="#i-radar"/></svg>扫描本机端口、launchd 与 GitHub 仓库…</div>';
   const d = await fetch('/api/discover').then(r => r.json());
-  const ports = d.ports.map(p => `<span class="chip"><svg class="icon"><use href="#i-laptop"/></svg>:${p.port} <b>${esc(p.cmd)}</b> pid ${p.pid}</span>`).join('') || '<span class="dim">无</span>';
+
+  const ports = d.ports.map(p => {
+    const i = p.inferred || {};
+    const done = p.registered;
+    return `<div class="found">
+      <span class="found-port">:${p.port}</span>
+      <div class="found-main">
+        <b>${esc(i.name || '未知应用')}</b>
+        <span class="found-path">${esc(i.localPath || '')}</span>
+      </div>
+      <span class="found-src">${esc(i.builtBy || '')}</span>
+      ${done
+        ? '<span class="found-done"><svg class="icon"><use href="#i-check"/></svg>已登记</span>'
+        : `<button class="btn sm" data-register="${esc(i.id || '')}" data-port="${p.port}"><svg class="icon"><use href="#i-plus"/></svg>登记</button>`}
+    </div>`;
+  }).join('') || '<span class="dim">无</span>';
+
   const agents = d.launchd.map(x => `<span class="chip"><svg class="icon"><use href="#i-cog"/></svg>${esc(x)}</span>`).join('') || '<span class="dim">无</span>';
   const repos = d.repos.map(r => `<span class="chip"><svg class="icon"><use href="#i-github"/></svg><a href="${r.url}" target="_blank" rel="noreferrer">${esc(r.name)}</a> ${esc((r.pushedAt || '').slice(0, 10))}</span>`).join('') || '<span class="dim">无</span>';
+
   $('#discover').innerHTML = `
-    <h4><svg class="icon"><use href="#i-laptop"/></svg>本机监听端口</h4><div class="chips">${ports}</div>
+    <h4><svg class="icon"><use href="#i-laptop"/></svg>本机监听端口 <span class="dim">（点「登记」加入工作台）</span></h4>
+    <div class="found-list">${ports}</div>
     <h4><svg class="icon"><use href="#i-cog"/></svg>launchd 常驻</h4><div class="chips">${agents}</div>
     <h4><svg class="icon"><use href="#i-github"/></svg>GitHub 仓库</h4><div class="chips">${repos}</div>`;
+}
+
+/* 登记：把扫描到的端口写入工作台 */
+async function registerFound(id, port) {
+  const btn = document.querySelector(`[data-register="${CSS.escape(id)}"]`);
+  if (btn) { btn.disabled = true; btn.innerHTML = '登记中…'; }
+  try {
+    const d = await fetch('/api/discover').then(r => r.json());
+    const hit = (d.ports || []).find(p => String(p.port) === String(port) && p.inferred?.id === id);
+    if (!hit) throw new Error('该端口已不在扫描结果中，请重新扫描');
+    const r = await fetch('/api/apps', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(hit.inferred),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    await load();
+    await discover();
+    await check();
+    flash(document.querySelector('#btn-discover-row'), '已登记');
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.innerHTML = '登记'; }
+    alert('登记失败：' + e.message);
+  }
 }
 
 /* ---------------- 弹窗 ---------------- */

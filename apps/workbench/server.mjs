@@ -578,17 +578,28 @@ function checkAll() {
 function isRealApp(p) {
   const cmd = p.command || '';
   const cwd = p.cwd || '';
+
   // 桌面应用内部 IPC（Electron preload / asar 资源）
   // 只认 /Applications 下的 .app 束，不能误伤 Homebrew 的 Python.app
   if (/\/Applications\/[^/]+\.app\//.test(cmd)) return false;
   if (/\.asar\b|\/preload\/|fork-preload/i.test(cmd)) return false;
-  // 运行时自身（node 解释器、LLM 服务端口等）
-  if (/ollama|vllm|lmstudio|llama|\.workbuddy\/binaries|\/bin\/node$|\.venv\/bin\/python$/.test(cmd)) {
-    // .venv/bin/python 仍可能是真应用，靠 cwd 二次判断
-    if (!/\.venv\/bin\/python$/.test(cmd)) return false;
-    if (!cwd || cwd === '/' || /^\/(usr|opt|Users\/[^/]+)$/.test(cwd)) return false;
-  }
-  if (/python3?\.\d+$/.test(cmd.trim().split(/\s+/)[0] || '') && (!cwd || cwd === '/')) return false;
+
+  // 模型服务端口不是应用
+  if (/(^|\s)(ollama|vllm|lmstudio|llama-server|lms)(\s|$)/i.test(cmd)) return false;
+
+  // 通用静态文件服务器不是应用
+  if (/-m\s+http\.server\b/.test(cmd)) return false;
+
+  // 判据是「进程在跑什么脚本」，不是「解释器来自哪里」——
+  // 应用完全可能用 WorkBuddy / nvm 自带的 node 或 python 启动
+  const args = cmd.trim().split(/\s+/);
+  const script = args.slice(1).find((a) => !a.startsWith('-'));
+  if (!script) return false;                                        // 裸解释器，没有脚本
+  if (/\/bin\/(node|python[\d.]*|bash|sh)$/.test(script)) return false;   // 脚本就是解释器本身
+  if (/\/\.workbuddy\/binaries\/.*\/node_modules\//.test(script)) return false; // 运行时自带内部工具
+
+  // 工作目录必须像个项目目录
+  if (!cwd || cwd === '/' || /^\/(usr|opt|private|var|System|Volumes)$/.test(cwd)) return false;
   return true;
 }
 
@@ -605,6 +616,19 @@ async function processCwd(pid) {
 async function processCommand(pid) {
   const r = await run('ps', ['-p', String(pid), '-o', 'command=']);
   return (r.stdout || '').trim().split('\n')[0].trim();
+}
+
+/** 读 package.json（不存在或损坏则返回 null） */
+function readPackageJson(dir) {
+  if (!dir) return null;
+  try {
+    const f = path.join(dir, 'package.json');
+    if (!fs.existsSync(f)) return null;
+    const pkg = JSON.parse(fs.readFileSync(f, 'utf8'));
+    return pkg && typeof pkg === 'object' ? pkg : null;
+  } catch {
+    return null;
+  }
 }
 
 /** 由端口信息推断一个应用登记条目 */
@@ -630,20 +654,40 @@ function inferApp(p) {
   if (!name) name = `端口 ${p.port}`;
   name = name.replace(/^\./, '').replace(/[-_]/g, ' ').trim() || `端口 ${p.port}`;
 
+  // package.json 里的 name 更权威（目录名常常只是缩写）
+  const pkg = readPackageJson(cwd);
+  if (pkg && typeof pkg.name === 'string' && pkg.name.trim()) {
+    name = pkg.name.trim();
+  }
+
   // 开发来源：按路径特征推断
   let builtBy = 'human';
   if (/\.openclaw\/workspace/.test(cwd) || /\.openclaw\/workspace/.test(cmd)) builtBy = 'openclaw';
   else if (/workbuddy/i.test(cwd) || /workbuddy/i.test(cmd)) builtBy = 'workbuddy';
   else if (/\.codex|codex/i.test(cwd) || /\.codex|codex/i.test(cmd)) builtBy = 'codex';
 
-  // npx 启动的应用，命令行里带随机缓存路径和 node 绝对路径，人没法直接用
-  // 归一化成 `npx <包名>` 形式
-  let startCmd = cmd;
-  const npx = cmd.match(/\/_npx\/[a-z0-9]+\/node_modules\/((?:@[^/]+\/)?[\w.-]+)/i);
-  if (npx) {
-    startCmd = `npx ${npx[1]}`;
-  } else {
-    startCmd = cmd.replace(/^\S*\/bin\/node\s+/, 'node ');
+  // 启动命令：优先用 package.json 里现成的 scripts（最可靠、最好记）
+  let startCmd = '';
+  if (pkg && pkg.scripts && typeof pkg.scripts === 'object') {
+    const script = ['dev', 'start', 'serve'].find((k) => typeof pkg.scripts[k] === 'string');
+    if (script) {
+      // scripts 里写死的端口可能被命令行 --port 覆盖过，以实际监听的端口为准
+      const m = pkg.scripts[script].match(/--port[= ]\s*(\d+)/i);
+      const scriptPort = m ? Number(m[1]) : null;
+      startCmd = scriptPort && scriptPort !== p.port
+        ? `npm run ${script} -- --port ${p.port}`
+        : `npm run ${script}`;
+    }
+  }
+  if (!startCmd) {
+    // npx 启动的应用，命令行里带随机缓存路径和 node 绝对路径，人没法直接用
+    // 归一化成 `npx <包名>` 形式
+    const npx = cmd.match(/\/_npx\/[a-z0-9]+\/node_modules\/((?:@[^/]+\/)?[\w.-]+)/i);
+    if (npx) {
+      startCmd = `npx ${npx[1]}`;
+    } else {
+      startCmd = cmd.replace(/^\S*\/bin\/node\s+/, 'node ');
+    }
   }
 
   return {
@@ -666,7 +710,7 @@ function inferApp(p) {
 }
 
 /* --------------------- 自动发现 --------------------- */
-async function discover() {
+async function discover(opts = {}) {
   const found = [];
   // 1. 本机监听端口
   const ports = await run('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN']);
@@ -725,10 +769,12 @@ async function discover() {
     const label = p.replace(/\.plist$/, '');
     if (/openclaw|local|appdesk|clawpilot/.test(label)) agentLabels.push(label);
   }
-  // 3. GitHub 仓库
-  const gh = await run('gh', ['repo', 'list', GH_ACCOUNT, '--limit', '50', '--json', 'name,url,pushedAt,description']);
+  // 3. GitHub 仓库（网络调用，端口扫描场景可跳过）
   let repos = [];
-  try { repos = JSON.parse(gh.stdout || '[]'); } catch { repos = []; }
+  if (!opts.skipRepos) {
+    const gh = await run('gh', ['repo', 'list', GH_ACCOUNT, '--limit', '50', '--json', 'name,url,pushedAt,description']);
+    try { repos = JSON.parse(gh.stdout || '[]'); } catch { repos = []; }
+  }
 
   const registered = new Set(readData().apps.map((a) => a.localUrl).filter(Boolean));
   for (const p of portList) {
@@ -971,6 +1017,16 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && p === '/api/check') {
       const snap = await checkAll();
       return json(res, 200, { ...snap, uptime: uptimeStats(24) });
+    }
+
+    if (req.method === 'GET' && p === '/api/local') {
+      // 只扫本机端口，跳过 GitHub；供前端打开即自动列出「本机在跑但未登记」
+      const d = await discover({ skipRepos: true });
+      return json(res, 200, {
+        at: d.scannedAt,
+        pending: (d.ports || []).filter((x) => !x.registered),
+        total: (d.ports || []).length,
+      });
     }
 
     if (req.method === 'GET' && p === '/api/discover') {

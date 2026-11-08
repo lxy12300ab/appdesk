@@ -471,6 +471,20 @@ html[data-theme="light"] .addresses a.local { background: var(--accent-soft); co
 }
 .found-done svg { width: 13px; height: 13px; }
 
+
+/* ============ 本机未登记应用 ============ */
+.pending {
+  margin-bottom: 20px; padding: 16px 18px;
+  border: 1px dashed var(--line); border-radius: var(--r-md);
+  background: var(--panel-2);
+}
+.pending-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.pending-head svg { width: 15px; height: 15px; color: var(--accent); }
+.pending-head b { font-size: var(--fs-body); font-weight: 700; }
+.pending-head span { font-family: var(--mono); font-size: var(--fs-aux); color: var(--muted); }
+
 /* ============ 发现面板 ============ */
 .discover { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px 20px; margin-bottom: 20px; }
 .discover h4 { font-size: 13px; color: var(--ink); font-weight: 600; margin: 20px 0 10px; display: flex; align-items: center; gap: 8px; }

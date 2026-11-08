@@ -114,6 +114,7 @@
       <button class="btn icon-only" id="btn-export" title="导出 Markdown" aria-label="导出 Markdown"><svg class="icon"><use href="#i-download"/></svg></button>
     </div>
 
+    <div id="pending" class="pending" hidden></div>
     <div id="discover" class="discover" hidden></div>
     <main id="grid" class="grid"></main>
     <p class="empty" id="empty" hidden><svg class="icon"><use href="#i-box"/></svg><br>还没有登记的应用。点「新建应用」或「自动发现」扫一遍本机。</p>
@@ -246,6 +247,7 @@ function render() {
   if (VIEW === 'cap') { renderCap(); return; }
   $('#grid').classList.remove('cap-mode');
   setHead(false);
+  renderPending();
   const list = visibleApps();
   $('#grid').innerHTML = list.map(card).join('') +
     `<button class="add-row" id="btn-discover-row"><svg class="icon"><use href="#i-radar"/></svg>自动发现本机应用</button>`;
@@ -884,13 +886,57 @@ async function registerFound(id, port) {
     }).then(r => r.json());
     if (r.error) throw new Error(r.error);
     await load();
-    await discover();
     await check();
+    await scanLocal();
     flash(document.querySelector('#btn-discover-row'), '已登记');
   } catch (e) {
     if (btn) { btn.disabled = false; btn.innerHTML = '登记'; }
     alert('登记失败：' + e.message);
   }
+}
+
+
+/* ---------------- 本机未登记应用 ---------------- */
+let PENDING = [];
+
+async function scanLocal() {
+  try {
+    const d = await fetch('/api/local').then(r => r.json());
+    PENDING = d.pending || [];
+  } catch (e) {
+    PENDING = [];
+  }
+  renderPending();
+  const n = PENDING.length;
+  const badge = document.querySelector('[data-view="all"] .n');
+  if (badge && n) badge.textContent = `${APPS.length}+${n}`;
+}
+
+function renderPending() {
+  const box = $('#pending');
+  if (!box) return;
+  if (!PENDING.length) { box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  box.innerHTML = `
+    <div class="pending-head">
+      <svg class="icon"><use href="#i-radar"/></svg>
+      <b>本机在跑、但还没登记</b>
+      <span>${PENDING.length} 个</span>
+    </div>
+    <div class="found-list">
+      ${PENDING.map(p => {
+        const i = p.inferred || {};
+        return `<div class="found">
+          <span class="found-port">:${p.port}</span>
+          <div class="found-main">
+            <b>${esc(i.name || '未知应用')}</b>
+            <span class="found-path">${esc(i.localPath || '')}</span>
+          </div>
+          <span class="found-src">${esc(i.builtBy || '')}</span>
+          <button class="btn sm" data-register="${esc(i.id || '')}" data-port="${p.port}"><svg class="icon"><use href="#i-plus"/></svg>登记</button>
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 
 /* ---------------- 弹窗 ---------------- */
@@ -948,7 +994,7 @@ $('#q').addEventListener('input', render);
 $('#f-cat').addEventListener('change', () => { VIEW = 'all'; document.querySelectorAll('.side-item[data-view]').forEach(x => x.classList.remove('on')); renderSideCats(); render(); });
 $('#f-by').addEventListener('change', render);
 
-load().then(() => { loadHealth(); check(); });
+load().then(() => { loadHealth(); check(); scanLocal(); });
 </script>
 </body>
 </html>
